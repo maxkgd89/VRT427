@@ -1,5 +1,5 @@
 #include "VRTGameMode.h"
-#include "VRTPawn.h"
+#include "Player/VRTPawn.h"
 
 AVRTGameMode::AVRTGameMode()
 {

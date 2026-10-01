@@ -23,29 +23,34 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-	/** Right thumbstick X handler; fires one snap turn per stick flick. */
+	/** Handler for the Turn axis (right thumbstick X); fires one snap turn per stick flick. */
 	void OnSnapTurnAxis(float Value);
 
 	/** Rotates the pawn around the HMD position so the player's head doesn't shift. */
 	void SnapTurn(float YawDegrees);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float SnapTurnAngle = 30.f;
 
 	/** Stick deflection needed to trigger a turn. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float SnapTurnActivationThreshold = 0.6f;
 
 	/** Stick must return below this before another turn can trigger. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float SnapTurnResetThreshold = 0.3f;
 
 	bool bSnapTurnArmed = true;
 
 	void OnMoveForward(float Value);
 	void OnMoveRight(float Value);
-	void UpdateMoveSpeed();
+	void OnRunPressed();
+	void OnRunReleased();
+
+	/** True while the Run action is held. */
+	bool bRunning = false;
 
 	/** Applies the radial dead zone to the stored stick input and moves the pawn. */
 	void ApplyMoveInput();
@@ -54,7 +59,7 @@ protected:
 	FVector2D RawMoveInput = FVector2D::ZeroVector;
 
 	/** Stick deflection below this is ignored (stick drift). Output is rescaled so it still ramps from 0 to 1. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion", meta = (ClampMin = "0.0", ClampMax = "0.9"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion", meta = (ClampMin = "0.0", ClampMax = "0.9"))
 	float MoveDeadZone = 0.2f;
 
 	/** Left controller's forward/right vectors flattened onto the horizontal plane. */
@@ -65,11 +70,11 @@ protected:
 	UFloatingPawnMovement* Movement;
 
 	/** Walk speed in cm/s. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float WalkSpeed = 150.f;
 
 	/** Run speed in cm/s, used while the left thumbstick is pressed. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float RunSpeed = 350.f;
 
 	/** Collision volume (root). Follows the HMD's horizontal position every tick. */
@@ -80,14 +85,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	USceneComponent* VROrigin;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Collision")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Collision")
 	float CapsuleRadius = 30.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Collision")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Collision")
 	float CapsuleHalfHeight = 85.f;
 
 	/** Downward acceleration in cm/s^2, so the capsule settles back to the floor after stepping onto something. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Collision")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Collision")
 	float GravityZ = -980.f;
 
 	float VerticalVelocity = 0.f;

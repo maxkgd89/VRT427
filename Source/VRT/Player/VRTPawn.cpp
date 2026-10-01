@@ -1,13 +1,13 @@
-#include "VRTPawn.h"
+#include "Player/VRTPawn.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
-#include "GameFramework/PlayerController.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Components/InputComponent.h"
 #include "MotionControllerComponent.h"
-#include "Engine/CollisionProfile.h"
+#include "VRTCollision.h"
+#include "VRTLog.h"
 #include "UObject/ConstructorHelpers.h"
 
 AVRTPawn::AVRTPawn()
@@ -19,7 +19,7 @@ AVRTPawn::AVRTPawn()
 
 	Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
 	Capsule->InitCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
-	Capsule->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
+	Capsule->SetCollisionProfileName(VRTCollision::PlayerProfile);
 	SetRootComponent(Capsule);
 
 	VROrigin = CreateDefaultSubobject<USceneComponent>(TEXT("VROrigin"));
@@ -80,7 +80,7 @@ void AVRTPawn::BeginPlay()
 		AddActorWorldOffset(FVector(0.f, 0.f, Hit.ImpactPoint.Z - OriginZ));
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("VRTPawn: trackingOrigin=%d floorHit=%d originZ=%.1f cameraZ=%.1f"),
+	VRT_LOG(LogVRTPawn, Log, "trackingOrigin=%d floorHit=%d originZ(World)=%.1f cameraZ(World)=%.1f",
 		(int32)UHeadMountedDisplayFunctionLibrary::GetTrackingOrigin(), Hit.bBlockingHit ? 1 : 0,
 		VROrigin->GetComponentLocation().Z, Camera->GetComponentLocation().Z);
 }
@@ -89,10 +89,23 @@ void AVRTPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxisKey(EKeys::OculusTouch_Right_Thumbstick_X, this, &AVRTPawn::OnSnapTurnAxis);
+	// Named mappings live in Config/DefaultInput.ini.
+	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AVRTPawn::OnSnapTurnAxis);
+	PlayerInputComponent->BindAxis(TEXT("MoveX"), this, &AVRTPawn::OnMoveRight);
+	PlayerInputComponent->BindAxis(TEXT("MoveY"), this, &AVRTPawn::OnMoveForward);
+	PlayerInputComponent->BindAction(TEXT("Run"), IE_Pressed, this, &AVRTPawn::OnRunPressed);
+	PlayerInputComponent->BindAction(TEXT("Run"), IE_Released, this, &AVRTPawn::OnRunReleased);
 
-	PlayerInputComponent->BindAxisKey(EKeys::OculusTouch_Left_Thumbstick_Y, this, &AVRTPawn::OnMoveForward);
-	PlayerInputComponent->BindAxisKey(EKeys::OculusTouch_Left_Thumbstick_X, this, &AVRTPawn::OnMoveRight);
+	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and action Run");
+}
+
+void AVRTPawn::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	// Apply the editable capsule size; VROrigin sits at the capsule bottom (floor).
+	Capsule->SetCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
+	VROrigin->SetRelativeLocation(FVector(0.f, 0.f, -CapsuleHalfHeight));
 }
 
 void AVRTPawn::OnSnapTurnAxis(float Value)
@@ -101,6 +114,7 @@ void AVRTPawn::OnSnapTurnAxis(float Value)
 	if (bSnapTurnArmed && AbsValue >= SnapTurnActivationThreshold)
 	{
 		bSnapTurnArmed = false;
+		VRT_LOG(LogVRTInput, Verbose, "Snap turn axis=%.2f", Value);
 		SnapTurn(Value > 0.f ? SnapTurnAngle : -SnapTurnAngle);
 	}
 	else if (!bSnapTurnArmed && AbsValue <= SnapTurnResetThreshold)
@@ -116,6 +130,7 @@ void AVRTPawn::SnapTurn(float YawDegrees)
 	const FVector NewLocation = Pivot + DeltaRot.RotateVector(GetActorLocation() - Pivot);
 
 	SetActorLocationAndRotation(NewLocation, DeltaRot * GetActorQuat());
+	VRT_LOG(LogVRTPawn, Log, "Snap turn %.0f deg, yaw(World)=%.1f", YawDegrees, GetActorRotation().Yaw);
 }
 
 FVector AVRTPawn::GetControllerForwardFlat() const
@@ -150,16 +165,21 @@ void AVRTPawn::ApplyMoveInput()
 	const float Scaled = FMath::Min((Magnitude - MoveDeadZone) / (1.f - MoveDeadZone), 1.f);
 	const FVector2D Input = RawMoveInput / Magnitude * Scaled;
 
-	UpdateMoveSpeed();
+	Movement->MaxSpeed = bRunning ? RunSpeed : WalkSpeed;
 	AddMovementInput(GetControllerForwardFlat(), Input.Y);
 	AddMovementInput(GetControllerRightFlat(), Input.X);
 }
 
-void AVRTPawn::UpdateMoveSpeed()
+void AVRTPawn::OnRunPressed()
 {
-	const APlayerController* PC = Cast<APlayerController>(GetController());
-	const bool bRunning = PC && PC->IsInputKeyDown(EKeys::OculusTouch_Left_Thumbstick_Click);
-	Movement->MaxSpeed = bRunning ? RunSpeed : WalkSpeed;
+	bRunning = true;
+	VRT_LOG(LogVRTPawn, Log, "Run false -> true (Run pressed)");
+}
+
+void AVRTPawn::OnRunReleased()
+{
+	bRunning = false;
+	VRT_LOG(LogVRTPawn, Log, "Run true -> false (Run released)");
 }
 
 void AVRTPawn::Tick(float DeltaSeconds)

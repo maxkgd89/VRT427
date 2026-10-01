@@ -7,6 +7,9 @@ public class VRT : ModuleRules
 	public VRT(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		// Source is organised in subfolders (Player/, Gameplay/, ...) without Public/Private; include as "Player/VRTPawn.h".
+		PublicIncludePaths.Add(ModuleDirectory);
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay" });
 
