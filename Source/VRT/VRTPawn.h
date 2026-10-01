@@ -5,6 +5,7 @@
 #include "VRTPawn.generated.h"
 
 class UCameraComponent;
+class UCapsuleComponent;
 class UFloatingPawnMovement;
 class UMotionControllerComponent;
 class UStaticMeshComponent;
@@ -20,6 +21,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	/** Right thumbstick X handler; fires one snap turn per stick flick. */
@@ -45,6 +47,16 @@ protected:
 	void OnMoveRight(float Value);
 	void UpdateMoveSpeed();
 
+	/** Applies the radial dead zone to the stored stick input and moves the pawn. */
+	void ApplyMoveInput();
+
+	/** Raw left thumbstick values (X = right, Y = forward). */
+	FVector2D RawMoveInput = FVector2D::ZeroVector;
+
+	/** Stick deflection below this is ignored (stick drift). Output is rescaled so it still ramps from 0 to 1. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion", meta = (ClampMin = "0.0", ClampMax = "0.9"))
+	float MoveDeadZone = 0.2f;
+
 	/** Left controller's forward/right vectors flattened onto the horizontal plane. */
 	FVector GetControllerForwardFlat() const;
 	FVector GetControllerRightFlat() const;
@@ -60,8 +72,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Locomotion")
 	float RunSpeed = 350.f;
 
+	/** Collision volume (root). Follows the HMD's horizontal position every tick. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UCapsuleComponent* Capsule;
+
+	/** Tracking-space origin, parented to the capsule and positioned at floor level. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	USceneComponent* VROrigin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Collision")
+	float CapsuleRadius = 30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Collision")
+	float CapsuleHalfHeight = 85.f;
+
+	/** Downward acceleration in cm/s^2, so the capsule settles back to the floor after stepping onto something. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VR|Collision")
+	float GravityZ = -980.f;
+
+	float VerticalVelocity = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UCameraComponent* Camera;
