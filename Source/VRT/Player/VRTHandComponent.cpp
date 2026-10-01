@@ -5,8 +5,10 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Player/VRTGrabPointComponent.h"
+#include "Player/VRTHolsterComponent.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
+#include "Weapons/VRTWeaponBase.h"
 
 UVRTHandComponent::UVRTHandComponent()
 {
@@ -136,6 +138,30 @@ void UVRTHandComponent::OnGripReleased()
 	VRT_LOG(LogVRTHand, Log, "%s: held %s on %s -> None (grip released)", *UEnum::GetValueAsString(Hand),
 		*Released->PointId.ToString(), *GetNameSafe(Released->GetOwner()));
 	Released->NotifyReleased(this);
+}
+
+AVRTWeaponBase* UVRTHandComponent::GetHeldWeapon() const
+{
+	const UVRTHolsterComponent* Holster = Cast<UVRTHolsterComponent>(HeldPoint);
+	return Holster ? Holster->GetWeapon() : nullptr;
+}
+
+void UVRTHandComponent::OnTriggerPressed()
+{
+	AVRTWeaponBase* Weapon = GetHeldWeapon();
+	VRT_LOG(LogVRTHand, Verbose, "%s: trigger pressed (weapon=%s)", *UEnum::GetValueAsString(Hand), *GetNameSafe(Weapon));
+	if (Weapon)
+	{
+		Weapon->OnTriggerPressed();
+	}
+}
+
+void UVRTHandComponent::OnTriggerReleased()
+{
+	if (AVRTWeaponBase* Weapon = GetHeldWeapon())
+	{
+		Weapon->OnTriggerReleased();
+	}
 }
 
 void UVRTHandComponent::PlayHapticPulse(float Intensity, float DurationSec)

@@ -10,6 +10,7 @@
 #include "Debug/VRTDebugSettings.h"
 #include "Player/VRTHandComponent.h"
 #include "Player/VRTHolsterComponent.h"
+#include "Weapons/VRTPistol.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
 #include "UObject/ConstructorHelpers.h"
@@ -57,7 +58,7 @@ AVRTPawn::AVRTPawn()
 	WaistHolster->SetupAttachment(BodyAnchor);
 	WaistHolster->PointId = FName("HolsterWaist");
 	WaistHolster->HeightFraction = 0.55f;
-	WaistHolster->HeightOffset = 0.f;
+	WaistHolster->HeightOffset = 8.f;
 	WaistHolster->ForwardOffset = 5.f;
 	WaistHolster->RightOffset = 20.f;
 
@@ -70,8 +71,7 @@ AVRTPawn::AVRTPawn()
 	ShoulderHolster->ForwardOffset = -10.f;
 	ShoulderHolster->RightOffset = 15.f;
 
-	WaistPlaceholder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WaistPlaceholder"));
-	WaistPlaceholder->SetupAttachment(WaistHolster);
+	WaistHolster->WeaponClass = AVRTPistol::StaticClass();
 
 	ShoulderPlaceholder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShoulderPlaceholder"));
 	ShoulderPlaceholder->SetupAttachment(ShoulderHolster);
@@ -99,15 +99,12 @@ AVRTPawn::AVRTPawn()
 		Hand->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	// Placeholder boxes: pistol 4 x 3 x 20 cm lying along the forward axis, gun 4 x 4 x 40 cm standing up.
+	// Placeholder box for the gun (step 6): 4 x 4 x 40 cm, standing up. The waist holster holds the real pistol.
 	if (CubeMesh.Succeeded())
 	{
-		WaistPlaceholder->SetStaticMesh(CubeMesh.Object);
 		ShoulderPlaceholder->SetStaticMesh(CubeMesh.Object);
 	}
-	WaistPlaceholder->SetRelativeScale3D(FVector(0.20f, 0.03f, 0.04f));
 	ShoulderPlaceholder->SetRelativeScale3D(FVector(0.04f, 0.04f, 0.40f));
-	WaistPlaceholder->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ShoulderPlaceholder->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
@@ -154,12 +151,15 @@ void AVRTPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("MoveX"), this, &AVRTPawn::OnMoveRight);
 	PlayerInputComponent->BindAxis(TEXT("MoveY"), this, &AVRTPawn::OnMoveForward);
 	PlayerInputComponent->BindAction(TEXT("ToggleRun"), IE_Pressed, this, &AVRTPawn::OnToggleRun);
+	PlayerInputComponent->BindAction(TEXT("RecenterHMD"), IE_Pressed, this, &AVRTPawn::OnRecenter);
+	PlayerInputComponent->BindAction(FireAction, IE_Pressed, this, &AVRTPawn::OnFirePressed);
+	PlayerInputComponent->BindAction(FireAction, IE_Released, this, &AVRTPawn::OnFireReleased);
 	PlayerInputComponent->BindAction(TEXT("GrabLeft"), IE_Pressed, this, &AVRTPawn::OnGrabLeftPressed);
 	PlayerInputComponent->BindAction(TEXT("GrabLeft"), IE_Released, this, &AVRTPawn::OnGrabLeftReleased);
 	PlayerInputComponent->BindAction(TEXT("GrabRight"), IE_Pressed, this, &AVRTPawn::OnGrabRightPressed);
 	PlayerInputComponent->BindAction(TEXT("GrabRight"), IE_Released, this, &AVRTPawn::OnGrabRightReleased);
 
-	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and actions ToggleRun, GrabLeft, GrabRight");
+	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and actions ToggleRun, GrabLeft, GrabRight, RecenterHMD, %s", *FireAction.ToString());
 }
 
 void AVRTPawn::OnConstruction(const FTransform& Transform)
@@ -169,7 +169,6 @@ void AVRTPawn::OnConstruction(const FTransform& Transform)
 	// Apply the editable capsule size; VROrigin sits at the capsule bottom (floor).
 	Capsule->SetCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
 	VROrigin->SetRelativeLocation(FVector(0.f, 0.f, -CapsuleHalfHeight + GetFloorToOriginHeight()));
-	WaistPlaceholder->SetVisibility(bShowWaistPlaceholder);
 	ShoulderPlaceholder->SetVisibility(bShowShoulderPlaceholder);
 }
 
@@ -241,10 +240,27 @@ void AVRTPawn::ApplyMoveInput()
 	AddMovementInput(GetControllerRightFlat(), Input.X);
 }
 
+void AVRTPawn::OnRecenter()
+{
+	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+	bBodyYawInitialized = false; // the body yaw re-aligns with the new forward on the next tick
+	VRT_LOG(LogVRTPawn, Log, "HMD recentered (RecenterHMD pressed), playMode=%s", PlayMode == EVRTPlayMode::Seated ? TEXT("Seated") : TEXT("Standing"));
+}
+
 void AVRTPawn::OnToggleRun()
 {
 	bRunning = !bRunning;
-	VRT_LOG(LogVRTPawn, Log, "Mode %s -> %s (ToggleRun pressed)", bRunning ? "Walk" : "Run", bRunning ? "Run" : "Walk");
+	VRT_LOG(LogVRTPawn, Log, "Mode %s -> %s (ToggleRun pressed)", bRunning ? TEXT("Walk") : TEXT("Run"), bRunning ? TEXT("Run") : TEXT("Walk"));
+}
+
+void AVRTPawn::OnFirePressed()
+{
+	RightHand->OnTriggerPressed();
+}
+
+void AVRTPawn::OnFireReleased()
+{
+	RightHand->OnTriggerReleased();
 }
 
 void AVRTPawn::OnGrabLeftPressed()

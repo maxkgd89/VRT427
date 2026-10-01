@@ -33,7 +33,7 @@ Content/VRTemplate/         UE VR Template — reference only
 - **Test level naming:** `Tools/Editor/create_test_level.py` generates the test map. Each time the script changes, bump `MAP_NAME` to the next number (`L_Test2`, `L_Test3`, ...) and keep older maps; tell the user to point the default maps (`Config/DefaultEngine.ini`) at the new one after it exists.
 - Never touch `Binaries/`, `Intermediate/`, `DerivedDataCache/`. Read `Saved/Logs/` freely; don't edit `Saved/`.
 - Weapons never simulate physics. Released weapons hide and respawn in their holster; they are never destroyed.
-- Movement is horizontal only (no gravity or jumping); walls block the pawn's capsule.
+- Movement is horizontal only (no jumping). The pawn has gravity only so the capsule settles back to the floor after stepping over low obstacles. Walls block the pawn's capsule.
 - Do not commit or push unless the user asks. Propose a commit message at the end of each step.
 
 ## Building
@@ -53,7 +53,7 @@ Content/VRTemplate/         UE VR Template — reference only
 - Name the space of every vector in code and logs: **World**, **PawnLocal** (relative to the VROrigin) or **Local** (component).
 - Prefer events and delegates over Tick. When Tick is needed, keep it cheap (Quest budget).
 - Debug console variables live under `VRT.Debug.*` (e.g. `VRT.Debug.Triggers`, `VRT.Debug.Holsters`, `VRT.Debug.Grab`, `VRT.Debug.TwoHand`). Debug drawing only happens when its cvar is on.
-- Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left X button). Never bind `EKeys::OculusTouch_*` directly in new code.
+- Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left Y button), `RecenterHMD` (left X button). Never bind `EKeys::OculusTouch_*` directly in new code.
 
 ## Logging
 

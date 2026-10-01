@@ -6,6 +6,7 @@
 #include "TimerManager.h"
 #include "VRTHandComponent.generated.h"
 
+class AVRTWeaponBase;
 class UVRTGrabPointComponent;
 
 /**
@@ -29,6 +30,13 @@ public:
 
 	/** Grip released: drops whatever is held. */
 	void OnGripReleased();
+
+	/** Trigger pressed / released: forwarded to the weapon in this hand, if any. */
+	void OnTriggerPressed();
+	void OnTriggerReleased();
+
+	/** The weapon drawn from a holster and held by this hand, or null. */
+	AVRTWeaponBase* GetHeldWeapon() const;
 
 	/** Closest grab point in range that this hand may grab, or null. */
 	UVRTGrabPointComponent* GetBestCandidate() const;

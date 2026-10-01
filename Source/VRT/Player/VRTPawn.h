@@ -59,6 +59,9 @@ protected:
 	/** Flips between walk and run (ToggleRun action, left X button). */
 	void OnToggleRun();
 
+	/** Recenters the HMD (RecenterHMD action, left X button): the current head pose becomes the origin and forward. */
+	void OnRecenter();
+
 	/**
 	 * Places the body anchor under the head, turned by the head's yaw only (pitch and roll ignored), and
 	 * re-fits the holsters to the current head height.
@@ -75,6 +78,9 @@ protected:
 
 	/** Head height (cm above the floor) used for the last holster update. */
 	float LastHeadHeight = -1.f;
+
+	void OnFirePressed();
+	void OnFireReleased();
 
 	void OnGrabLeftPressed();
 	void OnGrabLeftReleased();
@@ -107,7 +113,11 @@ protected:
 
 	/** Eye height above the floor in seated mode, cm. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion", meta = (ClampMin = "50.0"))
-	float SeatedEyeHeight = 160.f;
+	float SeatedEyeHeight = 150.f;
+
+	/** Input action that fires the weapon in the right hand. Remap here (e.g. to "FireLeft") without other changes. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon")
+	FName FireAction = FName("FireRight");
 
 	/** Walk speed in cm/s. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
@@ -158,10 +168,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UVRTHolsterComponent* ShoulderHolster;
 
-	/** Stand-in for the pistol in the waist zone until the real weapon exists (step 5). */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
-	UStaticMeshComponent* WaistPlaceholder;
-
 	/** Stand-in for the gun in the shoulder zone until the real weapon exists (step 6). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UStaticMeshComponent* ShoulderPlaceholder;
@@ -173,10 +179,6 @@ protected:
 	/** How fast the body turns after the head has left the dead zone, degrees per second. Snap turns rotate it instantly. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster", meta = (ClampMin = "1.0"))
 	float BodyYawFollowSpeed = 90.f;
-
-	/** Show the placeholder box in the waist zone. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")
-	bool bShowWaistPlaceholder = true;
 
 	/** Show the placeholder box in the shoulder zone. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")

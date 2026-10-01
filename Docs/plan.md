@@ -16,7 +16,7 @@ Project: `E:\UE_projects\VRT` · Engine: `E:\UE_4.27`
   - **Gun**: two-handed, fast fire rate, holstered over the right shoulder. Twice the pistol's length. The left hand grabs only the barrel and helps aim.
 - Weapons have no physics. When released they disappear and respawn in their holster.
 - Unlimited ammo for now.
-- Movement is horizontal only (no gravity or jumping). Walls block the pawn's capsule.
+- Movement is horizontal only (no jumping). The pawn has gravity only so the capsule settles back to the floor after stepping over low obstacles. Walls block the pawn's capsule.
 
 Later: enemy AI, spawning director, combat, health, ammo, procedural labyrinth.
 
@@ -66,7 +66,7 @@ Source/VRT/
 
 ### Input
 Move from hard-coded `EKeys::OculusTouch_*` bindings to named Action/Axis mappings in DefaultInput.ini. This lets Index, WMR and Quest controllers work, and lets the fire button be remapped:
-- `GrabLeft` / `GrabRight` (grip), `FireLeft` / `FireRight` (index trigger), `MoveX` / `MoveY`, `Turn`, `ToggleRun` (left X button switches walk/run mode).
+- `GrabLeft` / `GrabRight` (grip), `FireLeft` / `FireRight` (index trigger), `MoveX` / `MoveY`, `Turn`, `ToggleRun` (left Y button switches walk/run mode), `RecenterHMD` (left X button).
 
 ---
 
@@ -281,7 +281,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - Keys 3 and 4: **no reward for now** (optional collectibles).
 - Labyrinth: **no ceiling, open sky**, so beacons are visible from anywhere.
 - Key status: **wrist display** on the left wrist.
-- Development and testing are done **seated**: `AVRTPawn::PlayMode = Seated` (eye-level tracking, recentered, eyes at `SeatedEyeHeight` = 160 cm). Standing mode stays in the code; a runtime stand/seat switch comes later.
+- Development and testing are done **seated**: `AVRTPawn::PlayMode = Seated` (eye-level tracking, recentered, eyes at `SeatedEyeHeight` = 150 cm). Standing mode stays in the code; a runtime stand/seat switch comes later.
 - Holsters follow the head yaw slowly (dead zone `BodyYawDeadZone` 35�, then `BodyYawFollowSpeed` 90�/s); snap turns rotate the body instantly.
 
 ## 7. Open questions
@@ -291,8 +291,8 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - [x] Step 1 — Cleanup and foundation
 - [x] Step 2 — Test level
 - [x] Step 3 — Hands: grab detection
-- [ ] Step 4 — Holsters
-- [ ] Step 5 — Weapon base and pistol
+- [x] Step 4 — Holsters
+- [x] Step 5 — Weapon base and pistol
 - [ ] Step 6 — Two-handed gun
 - [ ] Step 7 — Keys and beacons
 - [ ] Step 8 — Level exit and game flow

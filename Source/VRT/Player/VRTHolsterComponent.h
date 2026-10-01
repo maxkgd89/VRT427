@@ -4,6 +4,7 @@
 #include "Player/VRTGrabPointComponent.h"
 #include "VRTHolsterComponent.generated.h"
 
+class AVRTWeaponBase;
 class UVRTHandComponent;
 
 /**
@@ -21,8 +22,15 @@ class VRT_API UVRTHolsterComponent : public UVRTGrabPointComponent
 public:
 	UVRTHolsterComponent();
 
+	/** The weapon living in this holster (spawned at BeginPlay), or null. */
+	AVRTWeaponBase* GetWeapon() const { return Weapon; }
+
 	/** Re-places the zone for the given head height (cm above the floor). */
 	void UpdateForHeadHeight(float HeadHeight);
+
+	/** Weapon spawned into this holster at BeginPlay. Leave empty for an empty zone. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")
+	TSubclassOf<AVRTWeaponBase> WeaponClass;
 
 	/** Zone height = HeightFraction * head height + HeightOffset. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")
@@ -42,7 +50,11 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UPROPERTY(Transient)
+	AVRTWeaponBase* Weapon = nullptr;
 
 	UFUNCTION()
 	void HandleHandEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

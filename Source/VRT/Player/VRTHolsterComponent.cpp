@@ -2,7 +2,9 @@
 #include "Debug/VRTDebugSettings.h"
 #include "DrawDebugHelpers.h"
 #include "Player/VRTHandComponent.h"
+#include "Engine/World.h"
 #include "VRTLog.h"
+#include "Weapons/VRTWeaponBase.h"
 
 UVRTHolsterComponent::UVRTHolsterComponent()
 {
@@ -23,6 +25,33 @@ void UVRTHolsterComponent::BeginPlay()
 	OnComponentEndOverlap.AddDynamic(this, &UVRTHolsterComponent::HandleHandExit);
 	OnPointGrabbed.AddDynamic(this, &UVRTHolsterComponent::HandleDrawn);
 	OnPointReleased.AddDynamic(this, &UVRTHolsterComponent::HandleReleased);
+
+	if (WeaponClass)
+	{
+		FActorSpawnParameters Params;
+		Params.Owner = GetOwner();
+		Params.Instigator = Cast<APawn>(GetOwner());
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		Weapon = GetWorld()->SpawnActor<AVRTWeaponBase>(WeaponClass, GetComponentTransform(), Params);
+		if (Weapon)
+		{
+			Weapon->SetHolster(this);
+		}
+		else
+		{
+			VRT_LOG(LogVRTHolster, Error, "%s: could not spawn weapon %s", *PointId.ToString(), *GetNameSafe(WeaponClass));
+		}
+	}
+}
+
+void UVRTHolsterComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (Weapon)
+	{
+		Weapon->Destroy();
+		Weapon = nullptr;
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void UVRTHolsterComponent::UpdateForHeadHeight(float HeadHeight)
@@ -51,12 +80,21 @@ void UVRTHolsterComponent::HandleHandExit(UPrimitiveComponent* OverlappedCompone
 
 void UVRTHolsterComponent::HandleDrawn(UVRTGrabPointComponent* /*GrabPoint*/, UVRTHandComponent* Hand)
 {
-	VRT_LOG(LogVRTHolster, Log, "%s: Holstered -> Drawn by %s (grip)", *PointId.ToString(), *UEnum::GetValueAsString(Hand->Hand));
+	VRT_LOG(LogVRTHolster, Log, "%s: Holstered -> Drawn by %s (grip), weapon=%s", *PointId.ToString(), *UEnum::GetValueAsString(Hand->Hand),
+		*GetNameSafe(Weapon));
+	if (Weapon)
+	{
+		Weapon->AttachToHand(Hand);
+	}
 }
 
 void UVRTHolsterComponent::HandleReleased(UVRTGrabPointComponent* /*GrabPoint*/, UVRTHandComponent* Hand)
 {
 	VRT_LOG(LogVRTHolster, Log, "%s: Drawn -> Holstered (grip released)", *PointId.ToString());
+	if (Weapon)
+	{
+		Weapon->ReturnToHolster();
+	}
 }
 
 void UVRTHolsterComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
