@@ -54,6 +54,7 @@ void AVRTWeaponBase::ReturnToHolster()
 {
 	const bool bWasHeld = IsHeld();
 	HoldingHand = nullptr;
+	GetWorldTimerManager().ClearTimer(AutoFireTimer);
 
 	// Detach -> hide -> move into the holster -> show. The weapon is never destroyed.
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -72,11 +73,25 @@ void AVRTWeaponBase::ReturnToHolster()
 
 void AVRTWeaponBase::OnTriggerPressed()
 {
-	TryFire();
+	if (bAutomatic)
+	{
+		// Fires immediately (if off cooldown), then every FireInterval while the trigger is held.
+		GetWorldTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateUObject(this, &AVRTWeaponBase::OnAutoFireTick), FireInterval, true, 0.f);
+	}
+	else
+	{
+		TryFire();
+	}
 }
 
 void AVRTWeaponBase::OnTriggerReleased()
 {
+	GetWorldTimerManager().ClearTimer(AutoFireTimer);
+}
+
+void AVRTWeaponBase::OnAutoFireTick()
+{
+	TryFire();
 }
 
 bool AVRTWeaponBase::TryFire()
@@ -88,7 +103,7 @@ bool AVRTWeaponBase::TryFire()
 
 	const float Now = GetWorld()->GetTimeSeconds();
 	const float SinceLast = Now - LastFireTime;
-	if (SinceLast < FireInterval)
+	if (SinceLast < FireInterval - 0.01f)
 	{
 		VRT_LOG(LogVRTWeapon, Verbose, "%s: cooldown, %.2f s left", *GetName(), FireInterval - SinceLast);
 		return false;
@@ -137,6 +152,6 @@ void AVRTWeaponBase::Fire()
 
 	if (HoldingHand)
 	{
-		HoldingHand->PlayHapticPulse(FireHapticIntensity, 0.1f);
+		HoldingHand->PlayHapticPulse(FireHapticIntensity, FMath::Min(0.1f, FireInterval));
 	}
 }

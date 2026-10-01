@@ -168,10 +168,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UVRTHolsterComponent* ShoulderHolster;
 
-	/** Stand-in for the gun in the shoulder zone until the real weapon exists (step 6). */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
-	UStaticMeshComponent* ShoulderPlaceholder;
-
 	/** The body (holsters) only starts turning once the head is turned further than this from it, degrees. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster", meta = (ClampMin = "0.0"))
 	float BodyYawDeadZone = 35.f;
@@ -179,10 +175,6 @@ protected:
 	/** How fast the body turns after the head has left the dead zone, degrees per second. Snap turns rotate it instantly. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster", meta = (ClampMin = "1.0"))
 	float BodyYawFollowSpeed = 90.f;
-
-	/** Show the placeholder box in the shoulder zone. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")
-	bool bShowShoulderPlaceholder = true;
 
 	/** Grab sphere on the left controller. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")

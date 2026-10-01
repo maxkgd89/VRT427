@@ -36,6 +36,9 @@ public:
 	void NotifyGrabbed(UVRTHandComponent* Hand);
 	void NotifyReleased(UVRTHandComponent* Hand);
 
+	/** Sets the grab zone radius in cm (also usable before registration). */
+	void SetGrabRadius(float NewRadius);
+
 	UVRTHandComponent* GetHeldBy() const { return HeldBy; }
 	bool IsHeld() const { return HeldBy != nullptr; }
 

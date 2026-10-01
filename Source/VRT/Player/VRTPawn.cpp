@@ -11,6 +11,7 @@
 #include "Player/VRTHandComponent.h"
 #include "Player/VRTHolsterComponent.h"
 #include "Weapons/VRTPistol.h"
+#include "Weapons/VRTRifle.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
 #include "UObject/ConstructorHelpers.h"
@@ -73,8 +74,7 @@ AVRTPawn::AVRTPawn()
 
 	WaistHolster->WeaponClass = AVRTPistol::StaticClass();
 
-	ShoulderPlaceholder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShoulderPlaceholder"));
-	ShoulderPlaceholder->SetupAttachment(ShoulderHolster);
+	ShoulderHolster->WeaponClass = AVRTRifle::StaticClass();
 
 	LeftHandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftHandMesh"));
 	LeftHandMesh->SetupAttachment(LeftController);
@@ -98,14 +98,6 @@ AVRTPawn::AVRTPawn()
 		Hand->SetRelativeScale3D(FVector(0.1f));
 		Hand->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-
-	// Placeholder box for the gun (step 6): 4 x 4 x 40 cm, standing up. The waist holster holds the real pistol.
-	if (CubeMesh.Succeeded())
-	{
-		ShoulderPlaceholder->SetStaticMesh(CubeMesh.Object);
-	}
-	ShoulderPlaceholder->SetRelativeScale3D(FVector(0.04f, 0.04f, 0.40f));
-	ShoulderPlaceholder->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AVRTPawn::BeginPlay()
@@ -169,7 +161,6 @@ void AVRTPawn::OnConstruction(const FTransform& Transform)
 	// Apply the editable capsule size; VROrigin sits at the capsule bottom (floor).
 	Capsule->SetCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
 	VROrigin->SetRelativeLocation(FVector(0.f, 0.f, -CapsuleHalfHeight + GetFloorToOriginHeight()));
-	ShoulderPlaceholder->SetVisibility(bShowShoulderPlaceholder);
 }
 
 float AVRTPawn::GetFloorToOriginHeight() const

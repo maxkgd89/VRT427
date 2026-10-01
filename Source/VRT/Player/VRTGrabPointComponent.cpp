@@ -19,6 +19,12 @@ void UVRTGrabPointComponent::OnRegister()
 	SetSphereRadius(GrabRadius);
 }
 
+void UVRTGrabPointComponent::SetGrabRadius(float NewRadius)
+{
+	GrabRadius = NewRadius;
+	SetSphereRadius(NewRadius);
+}
+
 bool UVRTGrabPointComponent::CanBeGrabbedBy(const UVRTHandComponent* Hand) const
 {
 	if (!bGrabEnabled || IsHeld() || !Hand)

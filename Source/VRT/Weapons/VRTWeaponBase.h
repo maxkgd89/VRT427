@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TimerManager.h"
 #include "VRTWeaponBase.generated.h"
 
 class AVRTProjectile;
@@ -26,10 +27,10 @@ public:
 	void SetHolster(UVRTHolsterComponent* InHolster);
 
 	/** Attaches to the hand at the grip offset. Called when the hand draws the weapon. */
-	void AttachToHand(UVRTHandComponent* Hand);
+	virtual void AttachToHand(UVRTHandComponent* Hand);
 
 	/** Detaches from the hand, hides, moves back into the holster and shows again. */
-	void ReturnToHolster();
+	virtual void ReturnToHolster();
 
 	/** Trigger input from the holding hand. */
 	virtual void OnTriggerPressed();
@@ -39,6 +40,9 @@ public:
 	bool IsHeld() const { return HoldingHand != nullptr; }
 
 protected:
+	/** Timer callback for full-auto fire. */
+	void OnAutoFireTick();
+
 	/** Fires if the cooldown allows it. Returns true if a shot was fired. */
 	bool TryFire();
 
@@ -64,6 +68,10 @@ protected:
 	/** A fire sound that is looping or longer than this is cut off after this many seconds. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.1"))
 	float FireSoundMaxSeconds = 0.5f;
+
+	/** True: holding the trigger keeps firing every FireInterval. False: one shot per press. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon")
+	bool bAutomatic = false;
 
 	/** Seconds between shots. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.01"))
@@ -94,6 +102,8 @@ private:
 
 	UPROPERTY(Transient)
 	UVRTHolsterComponent* Holster = nullptr;
+
+	FTimerHandle AutoFireTimer;
 
 	/** World time of the last shot (seconds). */
 	float LastFireTime = -1000.f;
