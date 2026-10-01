@@ -8,8 +8,9 @@
 
 UVRTHolsterComponent::UVRTHolsterComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = true;
+	// Debug drawing is the only thing this tick does, so Shipping builds skip it entirely.
+	PrimaryComponentTick.bCanEverTick = !UE_BUILD_SHIPPING;
+	PrimaryComponentTick.bStartWithTickEnabled = !UE_BUILD_SHIPPING;
 
 	// Only the right hand draws from holsters.
 	AllowedHand = EVRTHandFilter::RightOnly;

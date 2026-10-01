@@ -16,6 +16,7 @@
 AVRTKey::AVRTKey()
 {
 	DebugColor = FColor::Yellow;
+	PrimaryActorTick.bStartWithTickEnabled = true; // the key spins
 	BeaconClass = AVRTBeacon::StaticClass();
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));

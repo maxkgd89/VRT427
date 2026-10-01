@@ -12,8 +12,9 @@
 
 UVRTHandComponent::UVRTHandComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = true;
+	// Debug drawing is the only thing this tick does, so Shipping builds skip it entirely.
+	PrimaryComponentTick.bCanEverTick = !UE_BUILD_SHIPPING;
+	PrimaryComponentTick.bStartWithTickEnabled = !UE_BUILD_SHIPPING;
 
 	SetCollisionProfileName(VRTCollision::HandProfile);
 	SetGenerateOverlapEvents(true);
@@ -189,6 +190,17 @@ void UVRTHandComponent::StopHaptics()
 void UVRTHandComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// Aim line: where a shot from the weapon in this hand would go (VRT.Debug.Aim).
+	if (VRTDebug::ShowAimLines())
+	{
+		if (const AVRTWeaponBase* Weapon = GetHeldWeapon())
+		{
+			const FTransform Muzzle = Weapon->GetMuzzleTransform();
+			const FVector Start = Muzzle.GetLocation();
+			DrawDebugLine(GetWorld(), Start, Start + Muzzle.GetRotation().GetForwardVector() * 500.f, FColor::Orange, false, -1.f, 0, 0.3f);
+		}
+	}
 
 	if (!VRTDebug::ShowGrab())
 	{

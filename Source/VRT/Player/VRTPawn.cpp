@@ -373,6 +373,16 @@ void AVRTPawn::Tick(float DeltaSeconds)
 	ApplyMoveInput();
 	UpdateBodyAnchor();
 
+	if (bComfortVignette)
+	{
+		// Vignette follows how far the stick is pushed (after the dead zone), eased in and out.
+		const float Deflection = RawMoveInput.Size() > MoveDeadZone ? FMath::Min(RawMoveInput.Size(), 1.f) : 0.f;
+		CurrentVignette = FMath::FInterpTo(CurrentVignette, Deflection * VignetteMaxIntensity, DeltaSeconds, VignetteFadeSpeed);
+		Camera->PostProcessBlendWeight = 1.f;
+		Camera->PostProcessSettings.bOverride_VignetteIntensity = true;
+		Camera->PostProcessSettings.VignetteIntensity = CurrentVignette;
+	}
+
 	// Text is readable from its +X side, so point +X at the head.
 	WristDisplay->SetWorldRotation((Camera->GetComponentLocation() - WristDisplay->GetComponentLocation()).Rotation());
 

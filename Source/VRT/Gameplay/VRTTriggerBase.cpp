@@ -8,7 +8,9 @@
 
 AVRTTriggerBase::AVRTTriggerBase()
 {
+	// The tick only draws the debug sphere. Shipping builds start with it off (subclasses that need a tick turn it on).
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = !UE_BUILD_SHIPPING;
 
 	Trigger = CreateDefaultSubobject<USphereComponent>(TEXT("Trigger"));
 	Trigger->InitSphereRadius(TriggerRadius);

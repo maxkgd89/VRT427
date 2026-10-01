@@ -71,6 +71,11 @@ void AVRTWeaponBase::ReturnToHolster()
 		Holster ? *Holster->PointId.ToString() : TEXT("none"));
 }
 
+FTransform AVRTWeaponBase::GetMuzzleTransform() const
+{
+	return Muzzle->GetComponentTransform();
+}
+
 void AVRTWeaponBase::OnTriggerPressed()
 {
 	if (bAutomatic)

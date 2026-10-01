@@ -15,6 +15,8 @@ Instructions for any coding agent working in this repository (Claude Code reads 
 VRT.uproject
 AGENTS.md, CLAUDE.md        agent instructions
 Docs/plan.md                development plan + progress checklist
+Docs/tuning.md              generated table of every tunable property and its default
+Docs/performance.md         performance baseline and Quest checklist (step 9)
 Config/                     Default*.ini (input, collision, rendering, maps)
 Source/VRT/
   VRTLog.h/.cpp             log categories (see Logging)

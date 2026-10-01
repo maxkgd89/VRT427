@@ -295,7 +295,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - [x] Step 5 — Weapon base and pistol
 - [x] Step 6 — Two-handed gun
 - [x] Step 7 — Keys and beacons
-- [ ] Step 8 — Level exit and game flow
+- [x] Step 8 — Level exit and game flow
 - [ ] Step 9 — Integration, debug and performance pass
 - [ ] Step 10 — Procedural labyrinth
 - [ ] Step 11+ — Combat and AI

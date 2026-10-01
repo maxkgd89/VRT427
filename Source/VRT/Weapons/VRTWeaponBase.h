@@ -36,6 +36,9 @@ public:
 	virtual void OnTriggerPressed();
 	virtual void OnTriggerReleased();
 
+	/** World transform of the muzzle; its forward (X) axis is the shot direction. */
+	FTransform GetMuzzleTransform() const;
+
 	UVRTHandComponent* GetHoldingHand() const { return HoldingHand; }
 	bool IsHeld() const { return HoldingHand != nullptr; }
 
@@ -67,7 +70,7 @@ protected:
 
 	/** A fire sound that is looping or longer than this is cut off after this many seconds. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.1"))
-	float FireSoundMaxSeconds = 0.5f;
+	float FireSoundMaxSeconds = 0.25f;
 
 	/** True: holding the trigger keeps firing every FireInterval. False: one shot per press. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon")

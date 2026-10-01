@@ -97,6 +97,9 @@ protected:
 	/** Applies the radial dead zone to the stored stick input and moves the pawn. */
 	void ApplyMoveInput();
 
+	/** Current vignette strength; follows the stick deflection when bComfortVignette is on. */
+	float CurrentVignette = 0.f;
+
 	/** Raw left thumbstick values (X = right, Y = forward). */
 	FVector2D RawMoveInput = FVector2D::ZeroVector;
 
@@ -122,6 +125,18 @@ protected:
 	/** Input action that fires the weapon in the right hand. Remap here (e.g. to "FireLeft") without other changes. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon")
 	FName FireAction = FName("FireRight");
+
+	/** Darkens the screen edges while moving to reduce motion sickness. Off by default; costs a post-process pass. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Comfort")
+	bool bComfortVignette = false;
+
+	/** Vignette strength while moving at full stick deflection (0-1). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Comfort", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float VignetteMaxIntensity = 0.7f;
+
+	/** How quickly the vignette fades in and out (higher is faster). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Comfort", meta = (ClampMin = "0.1"))
+	float VignetteFadeSpeed = 4.f;
 
 	/** Walk speed in cm/s. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
