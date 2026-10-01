@@ -11,6 +11,7 @@ class UMotionControllerComponent;
 class UVRTHandComponent;
 class UVRTHolsterComponent;
 class UStaticMeshComponent;
+class UTextRenderComponent;
 
 /** How the player plays: tracking is floor-based when standing, eye-level (recentered) when seated. */
 UENUM(BlueprintType)
@@ -178,6 +179,14 @@ protected:
 	/** How fast the body turns after the head has left the dead zone, degrees per second. Snap turns rotate it instantly. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster", meta = (ClampMin = "1.0"))
 	float BodyYawFollowSpeed = 90.f;
+
+	/** Text on the left wrist: keys, exit requirement, level number. Turns toward the head every frame. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UTextRenderComponent* WristDisplay;
+
+	/** Rebuilds the wrist text from the game state. */
+	UFUNCTION()
+	void RefreshWristDisplay();
 
 	/** Grab sphere on the left controller. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")

@@ -1,5 +1,5 @@
 """Creates /Game/VRT/Maps/L_Test2 (see MAP_NAME): floor, hand-made 6x6 labyrinth (2 m walls), lights, fog, PlayerStart,
-plus three debug grab targets (step 3), four keys with beacons (step 7) and the beacon material.
+plus three debug grab targets (step 3), four keys with beacons (step 7) the beacon material and the level exit (step 8).
 
 Run inside the UE 4.27 editor (Python Editor Script Plugin enabled):
     Output Log -> Cmd dropdown -> Python:
@@ -12,7 +12,7 @@ import unreal
 
 # Naming rule: every new version of the generated test level gets the next number (L_Test2, L_Test3, ...).
 # Bump this when the script changes; old versions stay as they are.
-MAP_NAME = "L_Test3"
+MAP_NAME = "L_Test4"
 MAP_PATH = "/Game/VRT/Maps/" + MAP_NAME
 CELL = 350.0          # corridor width between wall centres, cm (3.5 m)
 WALL_HEIGHT = 200.0   # 2 m
@@ -173,7 +173,10 @@ def main():
     sx, sy = CELL / 2, (rows - 1) * CELL + CELL / 2
     start = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PlayerStart, unreal.Vector(sx, sy, 92.0), unreal.Rotator(0, 0, 0))
     start.set_actor_label("PlayerStart")
-    spawn_box("SpawnMarker", (sx, sy, 1.0), (120.0, 120.0, 2.0), cube, spawn_mat, "Level")
+    # Step 8: the level exit sits at the spawn and marks it (red pad until 2 keys are collected).
+    exit_actor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.VRTLevelExit, unreal.Vector(sx, sy, 85.0))
+    exit_actor.set_actor_label("LevelExit")
+    exit_actor.set_folder_path("Gameplay")
 
     # Step 3 test targets, in the first corridor in front of the spawn (facing +X, right = +Y).
     targets = [("DebugGrab_Any", (sx + 90, sy, 150.0), "ANY"),

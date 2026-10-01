@@ -6,7 +6,9 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Components/InputComponent.h"
 #include "MotionControllerComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Gameplay/VRTGameState.h"
 #include "Debug/VRTDebugSettings.h"
 #include "Player/VRTHandComponent.h"
 #include "Player/VRTHolsterComponent.h"
@@ -76,6 +78,17 @@ AVRTPawn::AVRTPawn()
 
 	ShoulderHolster->WeaponClass = AVRTRifle::StaticClass();
 
+	// Wrist display: small text above the left controller, turned toward the head in Tick.
+	WristDisplay = CreateDefaultSubobject<UTextRenderComponent>(TEXT("WristDisplay"));
+	WristDisplay->SetupAttachment(LeftController);
+	WristDisplay->SetRelativeLocation(FVector(-5.f, 0.f, 9.f));
+	WristDisplay->SetWorldSize(2.f);
+	WristDisplay->SetHorizontalAlignment(EHTA_Center);
+	WristDisplay->SetVerticalAlignment(EVRTA_TextCenter);
+	WristDisplay->SetTextRenderColor(FColor(80, 220, 255));
+	WristDisplay->SetCastShadow(false);
+	WristDisplay->SetText(FText::FromString(TEXT("VRT")));
+
 	LeftHandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftHandMesh"));
 	LeftHandMesh->SetupAttachment(LeftController);
 
@@ -134,6 +147,12 @@ void AVRTPawn::BeginPlay()
 		const float FloorZ = VROrigin->GetComponentLocation().Z - GetFloorToOriginHeight();
 		AddActorWorldOffset(FVector(0.f, 0.f, Hit.ImpactPoint.Z - FloorZ));
 	}
+
+	if (AVRTGameState* State = GetWorld()->GetGameState<AVRTGameState>())
+	{
+		State->OnProgressChanged.AddDynamic(this, &AVRTPawn::RefreshWristDisplay);
+	}
+	RefreshWristDisplay();
 
 	VRT_LOG(LogVRTPawn, Log, "mode=%s trackingOrigin=%d floorHit=%d originZ(World)=%.1f cameraZ(World)=%.1f",
 		PlayMode == EVRTPlayMode::Seated ? TEXT("Seated") : TEXT("Standing"), (int32)UHeadMountedDisplayFunctionLibrary::GetTrackingOrigin(), Hit.bBlockingHit ? 1 : 0,
@@ -324,12 +343,38 @@ void AVRTPawn::UpdateBodyAnchor()
 	}
 }
 
+void AVRTPawn::RefreshWristDisplay()
+{
+	const AVRTGameState* State = GetWorld() ? GetWorld()->GetGameState<AVRTGameState>() : nullptr;
+	if (!State)
+	{
+		return;
+	}
+
+	FString Text;
+	if (State->GetLevelState() == EVRTLevelState::Complete)
+	{
+		Text = FString::Printf(TEXT("LEVEL %d\nCOMPLETE"), State->GetLevelIndex());
+	}
+	else
+	{
+		const int32 Missing = FMath::Max(0, State->GetRequiredKeys() - State->GetKeysCollected());
+		const FString ExitLine = Missing > 0 ? FString::Printf(TEXT("EXIT NEEDS %d MORE"), Missing) : FString(TEXT("EXIT OPEN"));
+		Text = FString::Printf(TEXT("KEYS %d/%d\n%s\nLEVEL %d"), State->GetKeysCollected(), State->GetKeysTotal(), *ExitLine, State->GetLevelIndex());
+	}
+	WristDisplay->SetText(FText::FromString(Text));
+	VRT_LOG(LogVRTGameFlow, Verbose, "Wrist display: %s", *Text.Replace(TEXT("\n"), TEXT(" | ")));
+}
+
 void AVRTPawn::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
 	ApplyMoveInput();
 	UpdateBodyAnchor();
+
+	// Text is readable from its +X side, so point +X at the head.
+	WristDisplay->SetWorldRotation((Camera->GetComponentLocation() - WristDisplay->GetComponentLocation()).Rotation());
 
 	// Gravity: without it the capsule stays lifted after riding up over a low obstacle.
 	VerticalVelocity += GravityZ * DeltaSeconds;

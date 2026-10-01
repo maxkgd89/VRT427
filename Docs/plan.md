@@ -145,7 +145,7 @@ Each step ends with a playable test in the headset.
   - On the test level, "next level" restarts the same map.
   - From step 10 on, it regenerates the labyrinth with a new seed.
 - Use camera fade (`PlayerCameraManager->StartCameraFade`) for transitions. This avoids the hard cut and loading hitch that `OpenLevel` causes in VR.
-- **Wrist display** (left wrist `UWidgetComponent`): keys X/4, the exit requirement, level number.
+- **Wrist display** (left wrist; implemented as a `UTextRenderComponent` that faces the head, so no UMG/widget assets are needed; can be swapped for a `UWidgetComponent` later): keys X/4, the exit requirement, level number.
 - **Test:** the full loop of collect 2+ keys → return → level complete → restart.
 
 ### Step 9 — Integration, debug and performance pass
@@ -294,7 +294,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - [x] Step 4 — Holsters
 - [x] Step 5 — Weapon base and pistol
 - [x] Step 6 — Two-handed gun
-- [ ] Step 7 — Keys and beacons
+- [x] Step 7 — Keys and beacons
 - [ ] Step 8 — Level exit and game flow
 - [ ] Step 9 — Integration, debug and performance pass
 - [ ] Step 10 — Procedural labyrinth

@@ -14,6 +14,7 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 ## V0 — Basic chaser
 
 **Role:** the first, simplest enemy. Teaches the player that enemies lose track of you behind walls.
+**Keep it simple:** sight only, melee only, acts alone. Hearing → V1, alerting others → V2.
 
 ### Behaviour [decided]
 1. **Wander** — moves around randomly while it hasn't seen the player.
@@ -22,7 +23,11 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 4. **Loses sight** (player ran away, walls broke line of sight) → runs to the player's **last known location**.
 5. **At last known location** → **Wait** there for a while.
 6. **Wait over** (player not seen again) → back to **Wander**.
-- From any of Wander / Search / Wait: seeing the player again → Chase.
+- From any of Wander / GoToLastKnown / Wait: seeing the player again → Chase.
+- **Giving up:** V0 gives up only after it reaches the last known location and still can't see the player. No max chase time.
+- **Attack:** melee only.
+- **Senses:** sight only. No hearing.
+- **Social:** none. Does not alert or react to other enemies.
 
 ### State machine
 ```
@@ -50,11 +55,13 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 | Wander target | random reachable NavMesh point within 8–12 m | [proposed] |
 | Wander pause between points | 1–3 s | [proposed] |
 | Wait at last known location | 4 s | [proposed] |
-| Attack type | melee | [open] |
+| Attack type | melee only | [decided] |
 | Attack range | 1.5 m | [proposed] |
 | Attack damage / rate | 10 dmg every 1.0 s | [proposed] |
 | Health | 3 pistol hits | [proposed] |
-| Hearing (gunshots) | none for V0 — sight only | [proposed] |
+| Hearing | none — sight only | [decided] |
+| Alerting others | none | [decided] |
+| Max chase time | none — gives up only at last known location | [decided] |
 
 ### Implementation notes (for the later plan)
 - Pawn: `APawn` + capsule root + `UStaticMeshComponent` + `UFloatingPawnMovement`. Movement via `AAIController::MoveToLocation/MoveToActor` on NavMesh.
@@ -64,10 +71,48 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 - Logging: one log line per state change in the enemy log category.
 
 ### Open questions
-1. Melee only, or does V0 also have a ranged attack?
-2. Does V0 react to gunshots it hears behind walls, or is that for a later version?
-3. Several V0s: does one that spots the player alert others nearby?
-4. Does V0 ever stop chasing on its own (max chase time), or only when it loses sight?
+- None on behaviour. Proposed numbers to be tuned in playtests.
+
+---
+
+## V1 — Listener (draft)
+
+**Role:** V0 with **very good hearing**. Walls block sight but not sound, so hiding behind a wall no longer makes you safe if you shoot.
+
+### Behaviour [decided]
+- Everything from V0, plus hearing.
+
+### Ideas carried over from V0 discussion [proposed]
+- Hears gunshots through walls (`ReportNoiseEvent` / own noise events from weapons).
+- On hearing a noise → goes to the **noise location** (same as GoToLastKnown → Wait → Wander).
+- Hearing range larger than sight range (e.g. 25–30 m); maybe also footsteps when the player runs.
+- Sight still wins over hearing: if it sees the player → Chase.
+
+### Open questions
+1. What can it hear: gunshots only, or also footsteps / running?
+2. Hearing range, and does it go through any number of walls?
+3. Does hearing a new noise during Wait/GoToLastKnown redirect it?
+
+---
+
+## V2 — Social (draft)
+
+**Role:** enemy that **alerts others**. Turns one sighting into a group threat.
+
+### Behaviour [decided]
+- Everything from V0, plus alerting other enemies.
+
+### Ideas carried over from V0 discussion [proposed]
+- On spotting the player → alerts enemies within a radius (e.g. 10–15 m, or same maze chunk), sending them the player's position.
+- Alerted enemies go to that position (GoToLastKnown) even if they never saw the player.
+- Possible audible/visual "shout" cue so the player knows they were reported.
+- Optional: max chase time / give-up logic tuned for groups.
+
+### Open questions
+1. Who gets alerted: only V2s, or all enemy types?
+2. Alert radius: distance, path distance through the maze, or line of sight between enemies?
+3. Does the alert chain (alerted enemy alerts further)?
+4. Is there a cooldown between alerts?
 
 ---
 
