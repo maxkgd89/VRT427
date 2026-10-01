@@ -9,7 +9,16 @@ class UCapsuleComponent;
 class UFloatingPawnMovement;
 class UMotionControllerComponent;
 class UVRTHandComponent;
+class UVRTHolsterComponent;
 class UStaticMeshComponent;
+
+/** How the player plays: tracking is floor-based when standing, eye-level (recentered) when seated. */
+UENUM(BlueprintType)
+enum class EVRTPlayMode : uint8
+{
+	Standing,
+	Seated
+};
 
 /** VR pawn: HMD camera plus two motion controllers, each with a cube marking the hand. */
 UCLASS()
@@ -50,6 +59,23 @@ protected:
 	/** Flips between walk and run (ToggleRun action, left X button). */
 	void OnToggleRun();
 
+	/**
+	 * Places the body anchor under the head, turned by the head's yaw only (pitch and roll ignored), and
+	 * re-fits the holsters to the current head height.
+	 */
+	void UpdateBodyAnchor();
+
+	/** Body yaw (World, degrees). Follows the head slowly, see BodyYawDeadZone and BodyYawFollowSpeed. */
+	float BodyYaw = 0.f;
+
+	bool bBodyYawInitialized = false;
+
+	/** Cm from the floor (capsule bottom) up to the tracking origin: 0 standing, SeatedEyeHeight seated. */
+	float GetFloorToOriginHeight() const;
+
+	/** Head height (cm above the floor) used for the last holster update. */
+	float LastHeadHeight = -1.f;
+
 	void OnGrabLeftPressed();
 	void OnGrabLeftReleased();
 	void OnGrabRightPressed();
@@ -74,6 +100,14 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UFloatingPawnMovement* Movement;
+
+	/** Standing uses floor-level tracking. Seated uses eye-level tracking and lifts the origin to SeatedEyeHeight. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
+	EVRTPlayMode PlayMode = EVRTPlayMode::Seated;
+
+	/** Eye height above the floor in seated mode, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion", meta = (ClampMin = "50.0"))
+	float SeatedEyeHeight = 160.f;
 
 	/** Walk speed in cm/s. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
@@ -111,6 +145,42 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UMotionControllerComponent* RightController;
+
+	/** Follows the HMD position under the head, yaw only. Holsters hang off this. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	USceneComponent* BodyAnchor;
+
+	/** Right waist zone: holds the pistol (step 5). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UVRTHolsterComponent* WaistHolster;
+
+	/** Right shoulder zone: holds the gun (step 6). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UVRTHolsterComponent* ShoulderHolster;
+
+	/** Stand-in for the pistol in the waist zone until the real weapon exists (step 5). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UStaticMeshComponent* WaistPlaceholder;
+
+	/** Stand-in for the gun in the shoulder zone until the real weapon exists (step 6). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UStaticMeshComponent* ShoulderPlaceholder;
+
+	/** The body (holsters) only starts turning once the head is turned further than this from it, degrees. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster", meta = (ClampMin = "0.0"))
+	float BodyYawDeadZone = 35.f;
+
+	/** How fast the body turns after the head has left the dead zone, degrees per second. Snap turns rotate it instantly. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster", meta = (ClampMin = "1.0"))
+	float BodyYawFollowSpeed = 90.f;
+
+	/** Show the placeholder box in the waist zone. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")
+	bool bShowWaistPlaceholder = true;
+
+	/** Show the placeholder box in the shoulder zone. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Holster")
+	bool bShowShoulderPlaceholder = true;
 
 	/** Grab sphere on the left controller. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")

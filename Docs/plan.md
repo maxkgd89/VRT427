@@ -281,6 +281,8 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - Keys 3 and 4: **no reward for now** (optional collectibles).
 - Labyrinth: **no ceiling, open sky**, so beacons are visible from anywhere.
 - Key status: **wrist display** on the left wrist.
+- Development and testing are done **seated**: `AVRTPawn::PlayMode = Seated` (eye-level tracking, recentered, eyes at `SeatedEyeHeight` = 160 cm). Standing mode stays in the code; a runtime stand/seat switch comes later.
+- Holsters follow the head yaw slowly (dead zone `BodyYawDeadZone` 35�, then `BodyYawFollowSpeed` 90�/s); snap turns rotate the body instantly.
 
 ## 7. Open questions
 - None at the moment.
@@ -288,7 +290,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 ## 8. Progress
 - [x] Step 1 — Cleanup and foundation
 - [x] Step 2 — Test level
-- [ ] Step 3 — Hands: grab detection
+- [x] Step 3 — Hands: grab detection
 - [ ] Step 4 — Holsters
 - [ ] Step 5 — Weapon base and pistol
 - [ ] Step 6 — Two-handed gun

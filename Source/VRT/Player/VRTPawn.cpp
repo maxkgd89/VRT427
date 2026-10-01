@@ -6,7 +6,10 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Components/InputComponent.h"
 #include "MotionControllerComponent.h"
+#include "DrawDebugHelpers.h"
+#include "Debug/VRTDebugSettings.h"
 #include "Player/VRTHandComponent.h"
+#include "Player/VRTHolsterComponent.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
 #include "UObject/ConstructorHelpers.h"
@@ -46,6 +49,33 @@ AVRTPawn::AVRTPawn()
 	RightHand->SetupAttachment(RightController);
 	RightHand->Hand = EControllerHand::Right;
 
+	BodyAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("BodyAnchor"));
+	BodyAnchor->SetupAttachment(VROrigin);
+
+	// Waist: pistol, about 0.55 x head height, 20 cm right, slightly forward.
+	WaistHolster = CreateDefaultSubobject<UVRTHolsterComponent>(TEXT("WaistHolster"));
+	WaistHolster->SetupAttachment(BodyAnchor);
+	WaistHolster->PointId = FName("HolsterWaist");
+	WaistHolster->HeightFraction = 0.55f;
+	WaistHolster->HeightOffset = 0.f;
+	WaistHolster->ForwardOffset = 5.f;
+	WaistHolster->RightOffset = 20.f;
+
+	// Shoulder: gun, 10 cm below head height, 15 cm right, 10 cm behind the head.
+	ShoulderHolster = CreateDefaultSubobject<UVRTHolsterComponent>(TEXT("ShoulderHolster"));
+	ShoulderHolster->SetupAttachment(BodyAnchor);
+	ShoulderHolster->PointId = FName("HolsterShoulder");
+	ShoulderHolster->HeightFraction = 1.f;
+	ShoulderHolster->HeightOffset = -10.f;
+	ShoulderHolster->ForwardOffset = -10.f;
+	ShoulderHolster->RightOffset = 15.f;
+
+	WaistPlaceholder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WaistPlaceholder"));
+	WaistPlaceholder->SetupAttachment(WaistHolster);
+
+	ShoulderPlaceholder = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShoulderPlaceholder"));
+	ShoulderPlaceholder->SetupAttachment(ShoulderHolster);
+
 	LeftHandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftHandMesh"));
 	LeftHandMesh->SetupAttachment(LeftController);
 
@@ -68,14 +98,35 @@ AVRTPawn::AVRTPawn()
 		Hand->SetRelativeScale3D(FVector(0.1f));
 		Hand->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+
+	// Placeholder boxes: pistol 4 x 3 x 20 cm lying along the forward axis, gun 4 x 4 x 40 cm standing up.
+	if (CubeMesh.Succeeded())
+	{
+		WaistPlaceholder->SetStaticMesh(CubeMesh.Object);
+		ShoulderPlaceholder->SetStaticMesh(CubeMesh.Object);
+	}
+	WaistPlaceholder->SetRelativeScale3D(FVector(0.20f, 0.03f, 0.04f));
+	ShoulderPlaceholder->SetRelativeScale3D(FVector(0.04f, 0.04f, 0.40f));
+	WaistPlaceholder->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ShoulderPlaceholder->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AVRTPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Rift S is inside-out tracked; use floor-level origin so the camera sits at real head height.
-	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
+	if (PlayMode == EVRTPlayMode::Seated)
+	{
+		// Seated: eye-level origin, recentered so the head starts at the origin. The origin itself sits
+		// SeatedEyeHeight above the floor (see OnConstruction), so the eyes end up at that height.
+		UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Eye);
+		UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+	}
+	else
+	{
+		// Rift S is inside-out tracked; use floor-level origin so the camera sits at real head height.
+		UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
+	}
 
 	// PlayerStart is usually placed at capsule height or at floor level depending on the map, so
 	// don't trust it: trace down and put the tracking origin exactly on the floor.
@@ -85,12 +136,12 @@ void AVRTPawn::BeginPlay()
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(VRTSpawnFloorTrace), false, this);
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
 	{
-		const float OriginZ = VROrigin->GetComponentLocation().Z;
-		AddActorWorldOffset(FVector(0.f, 0.f, Hit.ImpactPoint.Z - OriginZ));
+		const float FloorZ = VROrigin->GetComponentLocation().Z - GetFloorToOriginHeight();
+		AddActorWorldOffset(FVector(0.f, 0.f, Hit.ImpactPoint.Z - FloorZ));
 	}
 
-	VRT_LOG(LogVRTPawn, Log, "trackingOrigin=%d floorHit=%d originZ(World)=%.1f cameraZ(World)=%.1f",
-		(int32)UHeadMountedDisplayFunctionLibrary::GetTrackingOrigin(), Hit.bBlockingHit ? 1 : 0,
+	VRT_LOG(LogVRTPawn, Log, "mode=%s trackingOrigin=%d floorHit=%d originZ(World)=%.1f cameraZ(World)=%.1f",
+		PlayMode == EVRTPlayMode::Seated ? TEXT("Seated") : TEXT("Standing"), (int32)UHeadMountedDisplayFunctionLibrary::GetTrackingOrigin(), Hit.bBlockingHit ? 1 : 0,
 		VROrigin->GetComponentLocation().Z, Camera->GetComponentLocation().Z);
 }
 
@@ -117,7 +168,14 @@ void AVRTPawn::OnConstruction(const FTransform& Transform)
 
 	// Apply the editable capsule size; VROrigin sits at the capsule bottom (floor).
 	Capsule->SetCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
-	VROrigin->SetRelativeLocation(FVector(0.f, 0.f, -CapsuleHalfHeight));
+	VROrigin->SetRelativeLocation(FVector(0.f, 0.f, -CapsuleHalfHeight + GetFloorToOriginHeight()));
+	WaistPlaceholder->SetVisibility(bShowWaistPlaceholder);
+	ShoulderPlaceholder->SetVisibility(bShowShoulderPlaceholder);
+}
+
+float AVRTPawn::GetFloorToOriginHeight() const
+{
+	return PlayMode == EVRTPlayMode::Seated ? SeatedEyeHeight : 0.f;
 }
 
 void AVRTPawn::OnSnapTurnAxis(float Value)
@@ -142,6 +200,7 @@ void AVRTPawn::SnapTurn(float YawDegrees)
 	const FVector NewLocation = Pivot + DeltaRot.RotateVector(GetActorLocation() - Pivot);
 
 	SetActorLocationAndRotation(NewLocation, DeltaRot * GetActorQuat());
+	BodyYaw += YawDegrees; // the body turns with the snap turn, no slow follow
 	VRT_LOG(LogVRTPawn, Log, "Snap turn %.0f deg, yaw(World)=%.1f", YawDegrees, GetActorRotation().Yaw);
 }
 
@@ -208,11 +267,56 @@ void AVRTPawn::OnGrabRightReleased()
 	RightHand->OnGripReleased();
 }
 
+void AVRTPawn::UpdateBodyAnchor()
+{
+	const FVector HeadWorld = Camera->GetComponentLocation();
+	const float FloorZ = VROrigin->GetComponentLocation().Z - GetFloorToOriginHeight();
+	const float HeadHeight = HeadWorld.Z - FloorZ;
+
+	// Yaw only: flatten the head's forward vector. Looking straight up or down leaves the yaw undefined,
+	// so the target is then simply the current body yaw.
+	const FVector FlatForward = Camera->GetForwardVector().GetSafeNormal2D();
+	const float HeadYaw = FlatForward.IsNearlyZero() ? BodyYaw : FlatForward.Rotation().Yaw;
+	if (!bBodyYawInitialized)
+	{
+		BodyYaw = HeadYaw;
+		bBodyYawInitialized = true;
+	}
+
+	// The body ignores head turns inside the dead zone. Beyond it, the body turns toward the head at
+	// BodyYawFollowSpeed until the head is back at the edge of the zone.
+	const float DeltaYaw = FMath::FindDeltaAngleDegrees(BodyYaw, HeadYaw);
+	if (FMath::Abs(DeltaYaw) > BodyYawDeadZone)
+	{
+		const float TargetYaw = HeadYaw - FMath::Sign(DeltaYaw) * BodyYawDeadZone;
+		BodyYaw = FMath::UnwindDegrees(FMath::FixedTurn(BodyYaw, TargetYaw, BodyYawFollowSpeed * GetWorld()->GetDeltaSeconds()));
+	}
+
+	BodyAnchor->SetWorldLocationAndRotation(FVector(HeadWorld.X, HeadWorld.Y, FloorZ), FRotator(0.f, BodyYaw, 0.f));
+
+	if (HeadHeight > 0.f && FMath::Abs(HeadHeight - LastHeadHeight) > 1.f)
+	{
+		VRT_LOG(LogVRTHolster, Verbose, "Head height %.1f -> %.1f cm (holsters refit)", LastHeadHeight, HeadHeight);
+		LastHeadHeight = HeadHeight;
+		WaistHolster->UpdateForHeadHeight(HeadHeight);
+		ShoulderHolster->UpdateForHeadHeight(HeadHeight);
+	}
+
+	VRT_LOG_THROTTLED(LogVRTHolster, VeryVerbose, 0.25, "Anchor(World)=%s yaw=%.1f headHeight=%.1f",
+		*BodyAnchor->GetComponentLocation().ToCompactString(), BodyYaw, HeadHeight);
+
+	if (VRTDebug::ShowHolsters())
+	{
+		DrawDebugCoordinateSystem(GetWorld(), BodyAnchor->GetComponentLocation(), BodyAnchor->GetComponentRotation(), 20.f, false, -1.f, 0, 0.5f);
+	}
+}
+
 void AVRTPawn::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
 	ApplyMoveInput();
+	UpdateBodyAnchor();
 
 	// Gravity: without it the capsule stays lifted after riding up over a low obstacle.
 	VerticalVelocity += GravityZ * DeltaSeconds;
