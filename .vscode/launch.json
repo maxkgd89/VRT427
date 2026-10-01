@@ -1,0 +1,128 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "VRT (Debug)",
+			"request": "launch",
+			"preLaunchTask": "VRT Win64 Debug Build",
+			"program": "E:\\UE_projects\\VRT\\Binaries\\Win64\\UE4-Win64-Debug.exe",
+			"args": [
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRT (DebugGame)",
+			"request": "launch",
+			"preLaunchTask": "VRT Win64 DebugGame Build",
+			"program": "E:\\UE_projects\\VRT\\Binaries\\Win64\\UE4-Win64-DebugGame.exe",
+			"args": [
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRT (Development)",
+			"request": "launch",
+			"preLaunchTask": "VRT Win64 Development Build",
+			"program": "E:\\UE_projects\\VRT\\Binaries\\Win64\\UE4.exe",
+			"args": [
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRT (Shipping)",
+			"request": "launch",
+			"preLaunchTask": "VRT Win64 Shipping Build",
+			"program": "E:\\UE_projects\\VRT\\Binaries\\Win64\\UE4-Win64-Shipping.exe",
+			"args": [
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRT (Test)",
+			"request": "launch",
+			"preLaunchTask": "VRT Win64 Test Build",
+			"program": "E:\\UE_projects\\VRT\\Binaries\\Win64\\UE4-Win64-Test.exe",
+			"args": [
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRTEditor (Debug)",
+			"request": "launch",
+			"preLaunchTask": "VRTEditor Win64 Debug Build",
+			"program": "E:\\UE_4.27\\Engine\\Binaries\\Win64\\UE4Editor-Win64-Debug.exe",
+			"args": [
+				"E:\\UE_projects\\VRT\\VRT.uproject"
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRTEditor (DebugGame)",
+			"request": "launch",
+			"preLaunchTask": "VRTEditor Win64 DebugGame Build",
+			"program": "E:\\UE_4.27\\Engine\\Binaries\\Win64\\UE4Editor-Win64-DebugGame.exe",
+			"args": [
+				"E:\\UE_projects\\VRT\\VRT.uproject"
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "VRTEditor (Development)",
+			"request": "launch",
+			"preLaunchTask": "VRTEditor Win64 Development Build",
+			"program": "E:\\UE_4.27\\Engine\\Binaries\\Win64\\UE4Editor.exe",
+			"args": [
+				"E:\\UE_projects\\VRT\\VRT.uproject"
+			],
+			"cwd": "E:\\UE_4.27",
+			"stopAtEntry": false,
+			"externalConsole": true,
+			"type": "cppvsdbg",
+			"visualizerFile": "E:\\UE_4.27\\Engine\\Extras\\VisualStudioDebugging\\UE4.natvis"
+		},
+		{
+			"name": "Generate Project Files",
+			"type": "clr",
+			"request": "launch",
+			"program": "E:\\UE_4.27\\Engine\\Binaries\\DotNET\\UnrealBuildTool.exe",
+			"console": "externalTerminal",
+			"args": [
+				"-projectfiles",
+				"-vscode",
+				"-project=E:\\UE_projects\\VRT\\VRT.uproject",
+				"-game",
+				"-engine"
+			],
+			"internalConsoleOptions": "openOnSessionStart",
+			"cwd": "E:\\UE_4.27"
+		}
+	]
+}

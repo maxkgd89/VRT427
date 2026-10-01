@@ -1,0 +1,27 @@
+[
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\MyClass.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\MyClass.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRT.Build.cs",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRT.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRT.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	}
+]

@@ -1,0 +1,707 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "VRT Win32 Debug Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Debug Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win32 Debug Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Debug Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 DebugGame Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 DebugGame Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win32 DebugGame Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 DebugGame Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Development Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Development Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win32 Development Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Development Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Shipping Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Shipping",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Shipping Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Shipping",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win32 Shipping Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Shipping Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Shipping",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Test Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Test",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Test Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Test",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win32 Test Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win32 Test Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win32",
+				"Test",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Debug Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Debug Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win64 Debug Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Debug Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 DebugGame Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 DebugGame Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win64 DebugGame Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 DebugGame Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Development Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Development Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win64 Development Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Development Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Shipping Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Shipping",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Shipping Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Shipping",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win64 Shipping Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Shipping Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Shipping",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Test Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Test",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Test Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Test",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRT Win64 Test Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRT Win64 Test Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRT",
+				"Win64",
+				"Test",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 Debug Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 Debug Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRTEditor Win64 Debug Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 Debug Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"Debug",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 DebugGame Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 DebugGame Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRTEditor Win64 DebugGame Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 DebugGame Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"DebugGame",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 Development Build",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 Development Rebuild",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Build.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"dependsOn": [
+				"VRTEditor Win64 Development Clean"
+			],
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		},
+		{
+			"label": "VRTEditor Win64 Development Clean",
+			"group": "build",
+			"command": "Engine\\Build\\BatchFiles\\Clean.bat",
+			"args": [
+				"VRTEditor",
+				"Win64",
+				"Development",
+				"E:\\UE_projects\\VRT\\VRT.uproject",
+				"-waitmutex"
+			],
+			"problemMatcher": "$msCompile",
+			"type": "shell",
+			"options": {
+				"cwd": "E:\\UE_4.27"
+			}
+		}
+	]
+}

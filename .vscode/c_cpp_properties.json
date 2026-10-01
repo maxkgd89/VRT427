@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "VRTEditor Editor Win64 Development (VRT)",
+            "intelliSenseMode": "msvc-x64",
+            "compileCommands": [
+                "E:\\UE_projects\\VRT\\.vscode\\compileCommands_VRT.json"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "Win32",
+            "intelliSenseMode": "msvc-x64",
+            "compileCommands": [
+                "E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default.json"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
