@@ -1,4 +1,5 @@
-"""Creates /Game/VRT/Maps/L_Test: floor, hand-made 6x6 labyrinth (2 m walls), lights, fog, PlayerStart.
+"""Creates /Game/VRT/Maps/L_Test2 (see MAP_NAME): floor, hand-made 6x6 labyrinth (2 m walls), lights, fog, PlayerStart,
+plus three debug grab targets for step 3.
 
 Run inside the UE 4.27 editor (Python Editor Script Plugin enabled):
     Output Log -> Cmd dropdown -> Python:
@@ -9,7 +10,10 @@ Units are centimetres. Edit MAZE to change the layout, then run again (the map i
 """
 import unreal
 
-MAP_PATH = "/Game/VRT/Maps/L_Test"
+# Naming rule: every new version of the generated test level gets the next number (L_Test2, L_Test3, ...).
+# Bump this when the script changes; old versions stay as they are.
+MAP_NAME = "L_Test2"
+MAP_PATH = "/Game/VRT/Maps/" + MAP_NAME
 CELL = 350.0          # corridor width between wall centres, cm (3.5 m)
 WALL_HEIGHT = 200.0   # 2 m
 WALL_THICKNESS = 20.0
@@ -64,8 +68,15 @@ def main():
 
     unreal.EditorAssetLibrary.make_directory("/Game/VRT/Maps")
     if unreal.EditorAssetLibrary.does_asset_exist(MAP_PATH):
-        unreal.EditorAssetLibrary.delete_asset(MAP_PATH)
-    if not unreal.EditorLevelLibrary.new_level(MAP_PATH):
+        # The map may be open in the editor, so it can't be deleted: open it and clear it out instead.
+        if not unreal.EditorLevelLibrary.load_level(MAP_PATH):
+            unreal.log_error("Could not open level " + MAP_PATH)
+            return
+        for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+            if isinstance(actor, (unreal.WorldSettings, unreal.Brush)):
+                continue
+            unreal.EditorLevelLibrary.destroy_actor(actor)
+    elif not unreal.EditorLevelLibrary.new_level(MAP_PATH):
         unreal.log_error("Could not create level " + MAP_PATH)
         return
 
@@ -100,6 +111,17 @@ def main():
     start.set_actor_label("PlayerStart")
     spawn_box("SpawnMarker", (sx, sy, 1.0), (120.0, 120.0, 2.0), cube, spawn_mat, "Level")
 
+    # Step 3 test targets, in the first corridor in front of the spawn (facing +X, right = +Y).
+    targets = [("DebugGrab_Any", (sx + 90, sy, 150.0), "ANY"),
+               ("DebugGrab_RightOnly", (sx + 90, sy + 50, 110.0), "RIGHT"),
+               ("DebugGrab_LeftOnly", (sx + 90, sy - 50, 110.0), "LEFT")]
+    for label, loc, hand in targets:
+        target = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.VRTDebugGrabTarget, unreal.Vector(*loc))
+        target.set_actor_label(label)
+        target.set_folder_path("Debug")
+        point = target.get_component_by_class(unreal.VRTGrabPointComponent)
+        point.set_editor_property("allowed_hand", {"ANY": unreal.VRTHandFilter.ANY, "RIGHT": unreal.VRTHandFilter.RIGHT_ONLY, "LEFT": unreal.VRTHandFilter.LEFT_ONLY}[hand])
+
     # Lighting: all movable, nothing baked.
     sun = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 500), unreal.Rotator(0, -50, 30))
     sun.set_actor_label("Sun")
@@ -115,7 +137,7 @@ def main():
     unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 100)).set_actor_label("Fog")
 
     unreal.EditorLevelLibrary.save_current_level()
-    unreal.log("L_Test created: %dx%d cells, %d walls, spawn at (%.0f, %.0f)" % (cols, rows, count, sx, sy))
+    unreal.log(MAP_NAME + " created: %dx%d cells, %d walls, spawn at (%.0f, %.0f)" % (cols, rows, count, sx, sy))
 
 
 main()

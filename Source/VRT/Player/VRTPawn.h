@@ -8,6 +8,7 @@ class UCameraComponent;
 class UCapsuleComponent;
 class UFloatingPawnMovement;
 class UMotionControllerComponent;
+class UVRTHandComponent;
 class UStaticMeshComponent;
 
 /** VR pawn: HMD camera plus two motion controllers, each with a cube marking the hand. */
@@ -48,6 +49,11 @@ protected:
 	void OnMoveRight(float Value);
 	/** Flips between walk and run (ToggleRun action, left X button). */
 	void OnToggleRun();
+
+	void OnGrabLeftPressed();
+	void OnGrabLeftReleased();
+	void OnGrabRightPressed();
+	void OnGrabRightReleased();
 
 	/** True while in run mode; toggled by the ToggleRun action. */
 	bool bRunning = false;
@@ -105,6 +111,14 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UMotionControllerComponent* RightController;
+
+	/** Grab sphere on the left controller. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UVRTHandComponent* LeftHand;
+
+	/** Grab sphere on the right controller. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UVRTHandComponent* RightHand;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	UStaticMeshComponent* LeftHandMesh;

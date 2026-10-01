@@ -6,6 +6,7 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Components/InputComponent.h"
 #include "MotionControllerComponent.h"
+#include "Player/VRTHandComponent.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
 #include "UObject/ConstructorHelpers.h"
@@ -36,6 +37,14 @@ AVRTPawn::AVRTPawn()
 	RightController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("RightController"));
 	RightController->SetupAttachment(VROrigin);
 	RightController->SetTrackingMotionSource(FName("Right"));
+
+	LeftHand = CreateDefaultSubobject<UVRTHandComponent>(TEXT("LeftHand"));
+	LeftHand->SetupAttachment(LeftController);
+	LeftHand->Hand = EControllerHand::Left;
+
+	RightHand = CreateDefaultSubobject<UVRTHandComponent>(TEXT("RightHand"));
+	RightHand->SetupAttachment(RightController);
+	RightHand->Hand = EControllerHand::Right;
 
 	LeftHandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftHandMesh"));
 	LeftHandMesh->SetupAttachment(LeftController);
@@ -94,8 +103,12 @@ void AVRTPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("MoveX"), this, &AVRTPawn::OnMoveRight);
 	PlayerInputComponent->BindAxis(TEXT("MoveY"), this, &AVRTPawn::OnMoveForward);
 	PlayerInputComponent->BindAction(TEXT("ToggleRun"), IE_Pressed, this, &AVRTPawn::OnToggleRun);
+	PlayerInputComponent->BindAction(TEXT("GrabLeft"), IE_Pressed, this, &AVRTPawn::OnGrabLeftPressed);
+	PlayerInputComponent->BindAction(TEXT("GrabLeft"), IE_Released, this, &AVRTPawn::OnGrabLeftReleased);
+	PlayerInputComponent->BindAction(TEXT("GrabRight"), IE_Pressed, this, &AVRTPawn::OnGrabRightPressed);
+	PlayerInputComponent->BindAction(TEXT("GrabRight"), IE_Released, this, &AVRTPawn::OnGrabRightReleased);
 
-	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and action ToggleRun");
+	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and actions ToggleRun, GrabLeft, GrabRight");
 }
 
 void AVRTPawn::OnConstruction(const FTransform& Transform)
@@ -173,6 +186,26 @@ void AVRTPawn::OnToggleRun()
 {
 	bRunning = !bRunning;
 	VRT_LOG(LogVRTPawn, Log, "Mode %s -> %s (ToggleRun pressed)", bRunning ? "Walk" : "Run", bRunning ? "Run" : "Walk");
+}
+
+void AVRTPawn::OnGrabLeftPressed()
+{
+	LeftHand->OnGripPressed();
+}
+
+void AVRTPawn::OnGrabLeftReleased()
+{
+	LeftHand->OnGripReleased();
+}
+
+void AVRTPawn::OnGrabRightPressed()
+{
+	RightHand->OnGripPressed();
+}
+
+void AVRTPawn::OnGrabRightReleased()
+{
+	RightHand->OnGripReleased();
 }
 
 void AVRTPawn::Tick(float DeltaSeconds)

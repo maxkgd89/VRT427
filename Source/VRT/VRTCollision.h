@@ -18,4 +18,8 @@ namespace VRTCollision
 	static const FName ProjectileProfile(TEXT("VRTProjectile"));
 	/** Held weapons: no collision. */
 	static const FName WeaponProfile(TEXT("VRTWeapon"));
+	/** Hand grab sphere: overlaps grab points (WorldDynamic) only. */
+	static const FName HandProfile(TEXT("VRTHand"));
+	/** Grab points (holster zones, barrel grip, debug targets): overlap hand spheres only. */
+	static const FName GrabPointProfile(TEXT("VRTGrabPoint"));
 }

@@ -11,6 +11,8 @@ namespace VRTDebug
 	VRT_API bool ShowHolsters();
 	/** VRT.Debug.TwoHand: draw two-hand grip points, aim axis and gun axes. */
 	VRT_API bool ShowTwoHand();
+	/** VRT.Debug.Grab: draw hand grab spheres (green idle, yellow target in range, red holding). */
+	VRT_API bool ShowGrab();
 	/** VRT.Debug.Aim: draw weapon aim lines. */
 	VRT_API bool ShowAimLines();
 }
