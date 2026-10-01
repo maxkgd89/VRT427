@@ -293,7 +293,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - [x] Step 3 — Hands: grab detection
 - [x] Step 4 — Holsters
 - [x] Step 5 — Weapon base and pistol
-- [ ] Step 6 — Two-handed gun
+- [x] Step 6 — Two-handed gun
 - [ ] Step 7 — Keys and beacons
 - [ ] Step 8 — Level exit and game flow
 - [ ] Step 9 — Integration, debug and performance pass

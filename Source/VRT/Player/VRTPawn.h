@@ -29,6 +29,9 @@ class VRT_API AVRTPawn : public APawn
 public:
 	AVRTPawn();
 
+	/** Short vibration on both controllers (pickups, level feedback). Intensity 0-1, duration in seconds. */
+	void PlayHapticPulseBothHands(float Intensity = 0.5f, float DurationSec = 0.15f);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;

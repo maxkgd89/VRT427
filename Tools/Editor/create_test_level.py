@@ -1,5 +1,5 @@
 """Creates /Game/VRT/Maps/L_Test2 (see MAP_NAME): floor, hand-made 6x6 labyrinth (2 m walls), lights, fog, PlayerStart,
-plus three debug grab targets for step 3.
+plus three debug grab targets (step 3), four keys with beacons (step 7) and the beacon material.
 
 Run inside the UE 4.27 editor (Python Editor Script Plugin enabled):
     Output Log -> Cmd dropdown -> Python:
@@ -12,7 +12,7 @@ import unreal
 
 # Naming rule: every new version of the generated test level gets the next number (L_Test2, L_Test3, ...).
 # Bump this when the script changes; old versions stay as they are.
-MAP_NAME = "L_Test2"
+MAP_NAME = "L_Test3"
 MAP_PATH = "/Game/VRT/Maps/" + MAP_NAME
 CELL = 350.0          # corridor width between wall centres, cm (3.5 m)
 WALL_HEIGHT = 200.0   # 2 m
@@ -39,6 +39,10 @@ CUBE = "/Engine/BasicShapes/Cube.Cube"
 WALL_MATERIAL = "/Game/StarterContent/Materials/M_Brick_Clay_New"
 FLOOR_MATERIAL = "/Game/StarterContent/Materials/M_Ground_Gravel"
 SPAWN_MATERIAL = "/Game/StarterContent/Materials/M_Metal_Gold"
+BEACON_MATERIAL_DIR = "/Game/VRT/Materials"
+BEACON_MATERIAL_NAME = "M_Beacon"
+KEY_COUNT = 4
+KEY_HEIGHT = 100.0    # cm above the floor
 
 
 def load(path):
@@ -59,6 +63,66 @@ def spawn_box(label, center, size, mesh, material, folder):
     if material:
         comp.set_material(0, material)
     return actor
+
+
+def ensure_beacon_material():
+    """Unlit emissive blue material with a 'Color' vector parameter (AVRTBeacon sets it at runtime)."""
+    path = BEACON_MATERIAL_DIR + "/" + BEACON_MATERIAL_NAME
+    if unreal.EditorAssetLibrary.does_asset_exist(path):
+        return
+    try:
+        unreal.EditorAssetLibrary.make_directory(BEACON_MATERIAL_DIR)
+        mat = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+            BEACON_MATERIAL_NAME, BEACON_MATERIAL_DIR, unreal.Material, unreal.MaterialFactoryNew())
+        mat.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+        param = unreal.MaterialEditingLibrary.create_material_expression(mat, unreal.MaterialExpressionVectorParameter, -400, 0)
+        param.set_editor_property("parameter_name", "Color")
+        param.set_editor_property("default_value", unreal.LinearColor(0.05, 0.3, 4.0, 1.0))
+        unreal.MaterialEditingLibrary.connect_material_property(param, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+        unreal.MaterialEditingLibrary.recompile_material(mat)
+        unreal.EditorAssetLibrary.save_asset(path)
+        unreal.log("Created " + path)
+    except Exception as exc:  # the beacon falls back to an engine material
+        unreal.log_warning("Could not create the beacon material (%s); beacons will use the engine fallback." % exc)
+
+
+def cell_distances(rows, cols, start):
+    """Walking distance in cells from `start` to every cell, through gaps in the maze walls."""
+    dist = {start: 0}
+    queue = [start]
+    while queue:
+        r, c = queue.pop(0)
+        steps = (
+            (r - 1, c, MAZE[2 * r][3 * c + 1] != "-"),
+            (r + 1, c, MAZE[2 * (r + 1)][3 * c + 1] != "-"),
+            (r, c - 1, MAZE[2 * r + 1][3 * c] != "|"),
+            (r, c + 1, MAZE[2 * r + 1][3 * (c + 1)] != "|"),
+        )
+        for nr, nc, open_ in steps:
+            if open_ and 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in dist:
+                dist[(nr, nc)] = dist[(r, c)] + 1
+                queue.append((nr, nc))
+    return dist
+
+
+def pick_key_cells(rows, cols, spawn_cell, count):
+    """Farthest-point sampling by walking distance: each key is as far as possible from the spawn and the other keys."""
+    all_dist = {}
+    chosen = []
+    sources = [spawn_cell]
+    for source in sources:
+        all_dist[source] = cell_distances(rows, cols, source)
+    while len(chosen) < count:
+        best, best_score = None, -1
+        for cell in all_dist[spawn_cell]:
+            if cell == spawn_cell or cell in chosen:
+                continue
+            score = min(all_dist[src][cell] for src in all_dist)
+            if score > best_score:
+                best, best_score = cell, score
+        chosen.append(best)
+        all_dist[best] = cell_distances(rows, cols, best)
+    return chosen
 
 
 def main():
@@ -121,6 +185,16 @@ def main():
         target.set_folder_path("Debug")
         point = target.get_component_by_class(unreal.VRTGrabPointComponent)
         point.set_editor_property("allowed_hand", {"ANY": unreal.VRTHandFilter.ANY, "RIGHT": unreal.VRTHandFilter.RIGHT_ONLY, "LEFT": unreal.VRTHandFilter.LEFT_ONLY}[hand])
+
+    # Step 7: four keys in the cells farthest from the spawn (and from each other), each with a beacon beside it.
+    ensure_beacon_material()
+    spawn_cell = (rows - 1, 0)
+    for index, (kr, kc) in enumerate(pick_key_cells(rows, cols, spawn_cell, KEY_COUNT)):
+        key = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            unreal.VRTKey, unreal.Vector(kc * CELL + CELL / 2, kr * CELL + CELL / 2, KEY_HEIGHT))
+        key.set_actor_label("Key_%d" % (index + 1))
+        key.set_folder_path("Gameplay")
+        unreal.log("Key_%d in cell (row %d, col %d)" % (index + 1, kr, kc))
 
     # Lighting: all movable, nothing baked.
     sun = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 500), unreal.Rotator(0, -50, 30))

@@ -100,6 +100,12 @@ AVRTPawn::AVRTPawn()
 	}
 }
 
+void AVRTPawn::PlayHapticPulseBothHands(float Intensity, float DurationSec)
+{
+	LeftHand->PlayHapticPulse(Intensity, DurationSec);
+	RightHand->PlayHapticPulse(Intensity, DurationSec);
+}
+
 void AVRTPawn::BeginPlay()
 {
 	Super::BeginPlay();
