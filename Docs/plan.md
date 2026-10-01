@@ -66,7 +66,7 @@ Source/VRT/
 
 ### Input
 Move from hard-coded `EKeys::OculusTouch_*` bindings to named Action/Axis mappings in DefaultInput.ini. This lets Index, WMR and Quest controllers work, and lets the fire button be remapped:
-- `GrabLeft` / `GrabRight` (grip), `FireLeft` / `FireRight` (index trigger), `MoveX` / `MoveY`, `Turn`, `Run`.
+- `GrabLeft` / `GrabRight` (grip), `FireLeft` / `FireRight` (index trigger), `MoveX` / `MoveY`, `Turn`, `ToggleRun` (left X button switches walk/run mode).
 
 ---
 
@@ -287,7 +287,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 
 ## 8. Progress
 - [x] Step 1 — Cleanup and foundation
-- [ ] Step 2 — Test level
+- [x] Step 2 — Test level
 - [ ] Step 3 — Hands: grab detection
 - [ ] Step 4 — Holsters
 - [ ] Step 5 — Weapon base and pistol

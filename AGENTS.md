@@ -52,7 +52,7 @@ Content/VRTemplate/         UE VR Template — reference only
 - Name the space of every vector in code and logs: **World**, **PawnLocal** (relative to the VROrigin) or **Local** (component).
 - Prefer events and delegates over Tick. When Tick is needed, keep it cheap (Quest budget).
 - Debug console variables live under `VRT.Debug.*` (e.g. `VRT.Debug.Triggers`, `VRT.Debug.Holsters`, `VRT.Debug.TwoHand`). Debug drawing only happens when its cvar is on.
-- Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `Run`. Never bind `EKeys::OculusTouch_*` directly in new code.
+- Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left X button). Never bind `EKeys::OculusTouch_*` directly in new code.
 
 ## Logging
 

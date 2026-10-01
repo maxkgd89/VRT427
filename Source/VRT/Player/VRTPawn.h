@@ -46,10 +46,10 @@ protected:
 
 	void OnMoveForward(float Value);
 	void OnMoveRight(float Value);
-	void OnRunPressed();
-	void OnRunReleased();
+	/** Flips between walk and run (ToggleRun action, left X button). */
+	void OnToggleRun();
 
-	/** True while the Run action is held. */
+	/** True while in run mode; toggled by the ToggleRun action. */
 	bool bRunning = false;
 
 	/** Applies the radial dead zone to the stored stick input and moves the pawn. */
@@ -73,7 +73,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float WalkSpeed = 150.f;
 
-	/** Run speed in cm/s, used while the left thumbstick is pressed. */
+	/** Run speed in cm/s, used while in run mode. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	float RunSpeed = 350.f;
 

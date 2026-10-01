@@ -93,10 +93,9 @@ void AVRTPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AVRTPawn::OnSnapTurnAxis);
 	PlayerInputComponent->BindAxis(TEXT("MoveX"), this, &AVRTPawn::OnMoveRight);
 	PlayerInputComponent->BindAxis(TEXT("MoveY"), this, &AVRTPawn::OnMoveForward);
-	PlayerInputComponent->BindAction(TEXT("Run"), IE_Pressed, this, &AVRTPawn::OnRunPressed);
-	PlayerInputComponent->BindAction(TEXT("Run"), IE_Released, this, &AVRTPawn::OnRunReleased);
+	PlayerInputComponent->BindAction(TEXT("ToggleRun"), IE_Pressed, this, &AVRTPawn::OnToggleRun);
 
-	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and action Run");
+	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and action ToggleRun");
 }
 
 void AVRTPawn::OnConstruction(const FTransform& Transform)
@@ -170,16 +169,10 @@ void AVRTPawn::ApplyMoveInput()
 	AddMovementInput(GetControllerRightFlat(), Input.X);
 }
 
-void AVRTPawn::OnRunPressed()
+void AVRTPawn::OnToggleRun()
 {
-	bRunning = true;
-	VRT_LOG(LogVRTPawn, Log, "Run false -> true (Run pressed)");
-}
-
-void AVRTPawn::OnRunReleased()
-{
-	bRunning = false;
-	VRT_LOG(LogVRTPawn, Log, "Run true -> false (Run released)");
+	bRunning = !bRunning;
+	VRT_LOG(LogVRTPawn, Log, "Mode %s -> %s (ToggleRun pressed)", bRunning ? "Walk" : "Run", bRunning ? "Run" : "Walk");
 }
 
 void AVRTPawn::Tick(float DeltaSeconds)
