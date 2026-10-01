@@ -286,7 +286,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - None at the moment.
 
 ## 8. Progress
-- [ ] Step 1 — Cleanup and foundation
+- [x] Step 1 — Cleanup and foundation
 - [ ] Step 2 — Test level
 - [ ] Step 3 — Hands: grab detection
 - [ ] Step 4 — Holsters
