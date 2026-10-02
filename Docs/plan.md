@@ -282,7 +282,7 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - Labyrinth: **no ceiling, open sky**, so beacons are visible from anywhere.
 - Key status: **wrist display** on the left wrist.
 - Development and testing are done **seated**: `AVRTPawn::PlayMode = Seated` (eye-level tracking, recentered, eyes at `SeatedEyeHeight` = 150 cm). Standing mode stays in the code; a runtime stand/seat switch comes later.
-- Holsters follow the head yaw slowly (dead zone `BodyYawDeadZone` 35�, then `BodyYawFollowSpeed` 90�/s); snap turns rotate the body instantly.
+- Holsters follow the head yaw slowly (dead zone `BodyYawDeadZone` 35°, then `BodyYawFollowSpeed` 90°/s); snap turns rotate the body instantly.
 
 ## 7. Open questions
 - None at the moment.
@@ -298,4 +298,10 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - [x] Step 8 — Level exit and game flow
 - [ ] Step 9 — Integration, debug and performance pass
 - [ ] Step 10 — Procedural labyrinth
+  - [x] 10.1 Maze data, Growing Tree generator, braiding, rooms, spawn hub, seeded, debug draw (`VRT.Maze.*`)
+  - [ ] 10.2 `AVRTMazeBuilder`: chunked HISM walls, floor, PlayerStart
+  - [ ] 10.3 Key and beacon placement via BFS, exit at spawn
+  - [ ] 10.4 GameMode regenerates on next level (seed+1, bigger)
+  - [ ] 10.5 Runtime NavMesh rebuild
+  - [ ] 10.6 Performance check on the max size
 - [ ] Step 11+ — Combat and AI
