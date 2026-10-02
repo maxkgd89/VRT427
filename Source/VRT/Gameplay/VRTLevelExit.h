@@ -4,6 +4,7 @@
 #include "Gameplay/VRTTriggerBase.h"
 #include "VRTLevelExit.generated.h"
 
+class AVRTBeacon;
 class UMaterialInstanceDynamic;
 class UStaticMeshComponent;
 
@@ -20,8 +21,12 @@ class VRT_API AVRTLevelExit : public AVRTTriggerBase
 public:
 	AVRTLevelExit();
 
+	/** Keys needed to leave. Call before the exit begins play. */
+	void SetRequiredKeys(int32 InRequiredKeys) { RequiredKeys = InRequiredKeys; }
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void OnPlayerEntered(AVRTPawn* Pawn) override;
 	virtual void OnPlayerExited(AVRTPawn* Pawn) override;
 
@@ -42,6 +47,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Exit")
 	FLinearColor OpenColor = FLinearColor(0.1f, 3.f, 0.3f, 1.f);
 
+	/** Colour of the beacon that marks the open exit (linear, values above 1 glow). Yellow, unlike the blue key beacons. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Exit")
+	FLinearColor BeaconColor = FLinearColor(4.f, 3.f, 0.1f, 1.f);
+
 	/** Buzz on both hands when the player enters without enough keys (0-1). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Exit", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float DeniedHapticIntensity = 0.6f;
@@ -53,6 +62,10 @@ protected:
 private:
 	UPROPERTY(Transient)
 	UMaterialInstanceDynamic* PadMaterial = nullptr;
+
+	/** Marks the exit from far away. Hidden until the player holds enough keys. */
+	UPROPERTY(Transient)
+	AVRTBeacon* Beacon = nullptr;
 
 	/** False until the player has left the trigger once. */
 	bool bArmed = false;

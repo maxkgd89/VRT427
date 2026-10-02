@@ -29,6 +29,144 @@ void FVRTMazeGenerator::CarveRoom(FVRTMazeData& Maze, const FIntPoint& Min, cons
 	}
 }
 
+int32 FVRTMazeGenerator::PlaceKeys(FVRTMazeData& Maze, const FVRTMazeParams& Params, FRandomStream& Random)
+{
+	const int32 KeyCount = FMath::Clamp(Params.KeyCount, 0, 4);
+	if (KeyCount == 0)
+	{
+		return 0;
+	}
+
+	const int32 MinKeyDistance = Params.MinKeyDistance > 0 ? Params.MinKeyDistance : FMath::Max(4, (Maze.Width + Maze.Height) / 4);
+	const int32 MinSpawnDistance = FMath::Max(3, Maze.MaxDistance / 3);
+
+	// Quadrants: split the grid at its middle. Each holds the cells of one region, farthest first.
+	struct FRegion
+	{
+		TArray<FIntPoint> Cells;     // far from the spawn (preferred)
+		TArray<FIntPoint> NearCells; // used only if the quadrant has no far cell, e.g. the quadrant that holds the spawn
+		int32 FarthestDistance = 0;
+	};
+	FRegion Regions[4];
+	const int32 MidX = Maze.Width / 2;
+	const int32 MidY = Maze.Height / 2;
+	for (int32 Y = 0; Y < Maze.Height; ++Y)
+	{
+		for (int32 X = 0; X < Maze.Width; ++X)
+		{
+			const FIntPoint P(X, Y);
+			const FVRTMazeCell& Cell = Maze.CellAt(P);
+			const bool bHub = Params.SpawnHubSize >= 2 && Cell.HasFlag(EVRTMazeCellFlag::Room) && Cell.Region == 0;
+			if (Cell.HasFlag(EVRTMazeCellFlag::Spawn) || bHub || Cell.Distance < 2)
+			{
+				continue;
+			}
+			FRegion& Region = Regions[(Y >= MidY ? 2 : 0) + (X >= MidX ? 1 : 0)];
+			(Cell.Distance >= MinSpawnDistance ? Region.Cells : Region.NearCells).Add(P);
+			Region.FarthestDistance = FMath::Max(Region.FarthestDistance, Cell.Distance);
+		}
+	}
+
+	// With fewer than 4 keys, use the quadrants that reach farthest from the spawn.
+	TArray<int32> Order = { 0, 1, 2, 3 };
+	Order.Sort([&](int32 A, int32 B) { return Regions[A].FarthestDistance > Regions[B].FarthestDistance; });
+
+	TArray<FIntPoint> Placed;
+	TArray<TArray<int32>> PlacedFields; // walking distances from every placed key
+
+	auto FarEnoughFromPlaced = [&](const FIntPoint& P)
+	{
+		for (const TArray<int32>& Field : PlacedFields)
+		{
+			const int32 D = Field[Maze.Index(P)];
+			if (D != INDEX_NONE && D < MinKeyDistance)
+			{
+				return false;
+			}
+		}
+		return true;
+	};
+
+	for (int32 OrderIndex = 0; OrderIndex < KeyCount; ++OrderIndex)
+	{
+		FRegion& Region = Regions[Order[OrderIndex]];
+		if (Region.Cells.Num() == 0 && Region.NearCells.Num() > 0)
+		{
+			VRT_LOG(LogVRTMaze, Verbose, "Key %d: quadrant %d has no cell %d+ steps from the spawn, using its farthest cells", OrderIndex + 1, Order[OrderIndex], MinSpawnDistance);
+			Region.Cells = Region.NearCells;
+		}
+		if (Region.Cells.Num() == 0)
+		{
+			VRT_LOG(LogVRTMaze, Warning, "Key %d: quadrant %d has no cell far enough from the spawn", OrderIndex + 1, Order[OrderIndex]);
+			continue;
+		}
+
+		// Farthest first; ties keep the row-major order so the result stays deterministic.
+		Region.Cells.StableSort([&](const FIntPoint& A, const FIntPoint& B) { return Maze.CellAt(A).Distance > Maze.CellAt(B).Distance; });
+
+		const int32 PoolSize = FMath::Clamp(FMath::CeilToInt(Region.Cells.Num() * FMath::Clamp(Params.KeyTopFraction, 0.01f, 1.f)), 1, Region.Cells.Num());
+		TArray<FIntPoint> Preferred, Pool;
+		for (int32 I = 0; I < PoolSize; ++I)
+		{
+			const FIntPoint P = Region.Cells[I];
+			Pool.Add(P);
+			const FVRTMazeCell& Cell = Maze.CellAt(P);
+			if (Cell.HasFlag(EVRTMazeCellFlag::DeadEnd) || Cell.HasFlag(EVRTMazeCellFlag::Room))
+			{
+				Preferred.Add(P);
+			}
+		}
+
+		// Preference: dead ends and rooms in the far share, then any far cell, then any cell of the quadrant.
+		auto Shuffle = [&](TArray<FIntPoint>& Array)
+		{
+			for (int32 I = Array.Num() - 1; I > 0; --I)
+			{
+				Array.Swap(I, Random.RandRange(0, I));
+			}
+		};
+		Shuffle(Preferred);
+		Shuffle(Pool);
+
+		const TArray<FIntPoint>* Attempts[] = { &Preferred, &Pool, &Region.Cells };
+		bool bFound = false;
+		FIntPoint Chosen = FIntPoint::ZeroValue;
+		for (const TArray<FIntPoint>* List : Attempts)
+		{
+			for (const FIntPoint& P : *List)
+			{
+				if (FarEnoughFromPlaced(P))
+				{
+					Chosen = P;
+					bFound = true;
+					break;
+				}
+			}
+			if (bFound)
+			{
+				break;
+			}
+		}
+
+		if (!bFound)
+		{
+			// Spacing cannot be met (tiny maze): take the farthest cell so every key still gets placed.
+			Chosen = Region.Cells[0];
+			VRT_LOG(LogVRTMaze, Warning, "Key %d: minimum key distance %d not reachable, using the farthest cell", OrderIndex + 1, MinKeyDistance);
+		}
+
+		Placed.Add(Chosen);
+		Maze.CellAt(Chosen).Flags |= EVRTMazeCellFlag::Key;
+		TArray<int32>& Field = PlacedFields.AddDefaulted_GetRef();
+		Maze.ComputeDistanceField(Chosen, Field);
+		VRT_LOG(LogVRTMaze, Log, "Key %d in quadrant %d: cell (%d, %d), %d steps from the spawn%s%s", OrderIndex + 1, Order[OrderIndex], Chosen.X, Chosen.Y,
+			Maze.CellAt(Chosen).Distance, Maze.CellAt(Chosen).HasFlag(EVRTMazeCellFlag::DeadEnd) ? TEXT(", dead end") : TEXT(""),
+			Maze.CellAt(Chosen).HasFlag(EVRTMazeCellFlag::Room) ? TEXT(", room") : TEXT(""));
+	}
+
+	return Placed.Num();
+}
+
 FVRTMazeData FVRTMazeGenerator::Generate(const FVRTMazeParams& Params, FVRTMazeStats* OutStats)
 {
 	const double StartTime = FPlatformTime::Seconds();
@@ -203,14 +341,17 @@ FVRTMazeData FVRTMazeGenerator::Generate(const FVRTMazeParams& Params, FVRTMazeS
 	}
 	Maze.RefreshDeadEnds();
 
-	// --- Distances from the spawn, and bookkeeping. ---
+	// --- Distances from the spawn, then the keys. A separate stream keeps the keys from changing the maze layout. ---
 	const int32 Reachable = Maze.ComputeDistances(Maze.SpawnCell);
+	FRandomStream KeyRandom(Params.Seed * 7919 + 17);
+	const int32 KeysPlaced = PlaceKeys(Maze, Params, KeyRandom);
 
 	if (OutStats)
 	{
 		OutStats->DeadEndsBeforeBraid = DeadEndsBefore;
 		OutStats->DeadEndsAfterBraid = Maze.CountFlag(EVRTMazeCellFlag::DeadEnd);
 		OutStats->RoomsCarved = Rooms.Num();
+		OutStats->KeysPlaced = KeysPlaced;
 		OutStats->CellsReachable = Reachable;
 		OutStats->GenerationMs = (FPlatformTime::Seconds() - StartTime) * 1000.0;
 	}

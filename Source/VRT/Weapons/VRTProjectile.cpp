@@ -15,6 +15,7 @@ AVRTProjectile::AVRTProjectile()
 	Collision->InitSphereRadius(2.f);
 	Collision->SetCollisionProfileName(VRTCollision::ProjectileProfile);
 	Collision->SetNotifyRigidBodyCollision(true); // fire OnComponentHit
+	Collision->SetCanEverAffectNavigation(false); // bullets fly through the navmesh area all the time
 	SetRootComponent(Collision);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));

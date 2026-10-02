@@ -30,10 +30,28 @@ void AVRTGameState::AddKey()
 	OnProgressChanged.Broadcast();
 }
 
+void AVRTGameState::ResetKeys()
+{
+	KeysCollected = 0;
+	KeysTotal = 0;
+	VRT_LOG(LogVRTGameFlow, Log, "Keys reset");
+	OnKeysChanged.Broadcast(KeysCollected, KeysTotal);
+	OnProgressChanged.Broadcast();
+}
+
 void AVRTGameState::SetRequiredKeys(int32 InRequiredKeys)
 {
 	RequiredKeys = InRequiredKeys;
 	VRT_LOG(LogVRTGameFlow, Log, "Exit requires %d keys", RequiredKeys);
+	OnProgressChanged.Broadcast();
+}
+
+void AVRTGameState::SetMazeInfo(int32 InSeed, int32 InWidth, int32 InHeight)
+{
+	MazeSeed = InSeed;
+	MazeWidth = InWidth;
+	MazeHeight = InHeight;
+	VRT_LOG(LogVRTGameFlow, Log, "Maze info: seed=%d size=%dx%d", MazeSeed, MazeWidth, MazeHeight);
 	OnProgressChanged.Broadcast();
 }
 

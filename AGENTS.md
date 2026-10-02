@@ -55,8 +55,8 @@ Content/VRTemplate/         UE VR Template — reference only
 - Name the space of every vector in code and logs: **World**, **PawnLocal** (relative to the VROrigin) or **Local** (component).
 - Prefer events and delegates over Tick. When Tick is needed, keep it cheap (Quest budget).
 - Debug console variables live under `VRT.Debug.*` (e.g. `VRT.Debug.Triggers`, `VRT.Debug.Holsters`, `VRT.Debug.Grab`, `VRT.Debug.TwoHand`). Debug drawing only happens when its cvar is on.
-- Maze debugging (step 10): console commands `VRT.Maze.Generate [W H Seed Braid Rooms NewestBias Scale]` (draws a miniature and prints the maze as text to `LogVRTMaze`), `VRT.Maze.Clear`, `VRT.Maze.Build [W H Seed Braid Rooms NewestBias]` (rebuilds the maze geometry in the maze map), `VRT.Maze.SelfTest` (checks many generated mazes; works headless).
-- Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left Y button), `RecenterHMD` (left X button). Never bind `EKeys::OculusTouch_*` directly in new code.
+- Maze debugging (step 10): console commands `VRT.Maze.Generate [W H Seed Braid Rooms NewestBias Scale]` (draws a miniature and prints the maze as text to `LogVRTMaze`), `VRT.Maze.Clear`, `VRT.Maze.Build [W H Seed Braid Rooms NewestBias]` (rebuilds the maze geometry in the maze map), `VRT.Maze.Level N` (fade and go to level N: maze size, seed and rooms follow the level), `VRT.Nav.Status` / `VRT.Nav.Test` (navigation mesh state and a spawn-to-keys path check), `VRT.Maze.SelfTest` (checks many generated mazes; works headless).
+- Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left Y button), `RecenterHMD` (left X button), `ToggleMap` (left Menu button: dev map of the current maze). Never bind `EKeys::OculusTouch_*` directly in new code.
 
 ## Logging
 

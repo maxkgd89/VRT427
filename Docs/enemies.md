@@ -11,6 +11,42 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 
 ---
 
+## Spawn modes (shared by enemy types)
+
+Applies to: **V0, V1, V2** [decided]
+
+Every enemy can be spawned in one of two modes.
+
+### 1) Roaming [decided]
+- Spawns awake and starts in **Wander**. Uses its normal senses (sight, plus hearing if the type has it).
+
+### 2) Sleeping [decided]
+- Spawns asleep, standing still.
+- **No sight** while asleep.
+- Perception while asleep is **imitated with two spheres** around the enemy (simple distance check, walls ignored, no line-of-sight):
+  - **Approach sphere (3 m)**: the player enters it → enemy wakes → **Chase**.
+  - **Gunshot sphere (15 m)**: a gunshot inside it → enemy wakes → goes to the **shot location** (GoToLastKnown → Wait → Wander).
+- Applies to V0 too: a sleeping V0 wakes on gunshots via the sphere, even though an awake V0 has no hearing.
+- **Wake-up delay** with a visible "waking" cue, so the player gets a moment to react.
+- A **V2 alert wakes** sleeping enemies inside the alert radius (they go to the alerted position).
+- **Never sleeps again**: after waking, the enemy uses its normal roaming behaviour for the rest of its life.
+- Design intent: the player can **choose to risk** sneaking past a sleeping enemy close to it, as long as they stay out of the approach sphere and don't shoot nearby.
+
+### Sleeping parameters
+| Parameter | Value | Status |
+|---|---|---|
+| Approach sphere radius | 3 m | [decided] |
+| Gunshot sphere radius | 15 m | [decided] |
+| Spheres blocked by walls | no — pure spheres | [decided] |
+| Wake-up delay | 0.5–1 s | [decided] (exact value tuned in playtest) |
+| Visual while asleep | dim colour / no emissive, slow "breathing" scale pulse | [proposed] |
+| Visual while waking | brightening colour / scale pop | [proposed] |
+
+### Open questions
+- None.
+
+---
+
 ## V0 — Basic chaser
 
 **Role:** the first, simplest enemy. Teaches the player that enemies lose track of you behind walls.
@@ -81,17 +117,17 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 
 ### Behaviour [decided]
 - Everything from V0, plus hearing.
+- Hears **gunshots only** (no footsteps, no other sounds).
 
-### Ideas carried over from V0 discussion [proposed]
-- Hears gunshots through walls (`ReportNoiseEvent` / own noise events from weapons).
-- On hearing a noise → goes to the **noise location** (same as GoToLastKnown → Wait → Wander).
-- Hearing range larger than sight range (e.g. 25–30 m); maybe also footsteps when the player runs.
+### Ideas [proposed]
+- Gunshots heard through walls (weapons report a noise event on fire).
+- On hearing a gunshot → goes to the **shot location** (same as GoToLastKnown → Wait → Wander).
+- Hearing range larger than sight range (e.g. 25–30 m).
 - Sight still wins over hearing: if it sees the player → Chase.
 
 ### Open questions
-1. What can it hear: gunshots only, or also footsteps / running?
-2. Hearing range, and does it go through any number of walls?
-3. Does hearing a new noise during Wait/GoToLastKnown redirect it?
+1. Hearing range, and is it a plain sphere through walls (like sleeping mode) or reduced by walls?
+2. Does hearing a new gunshot during Wait/GoToLastKnown redirect it?
 
 ---
 
@@ -101,18 +137,22 @@ Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confir
 
 ### Behaviour [decided]
 - Everything from V0, plus alerting other enemies.
+- Alerts **every enemy type**.
+- Alert reach = **straight-line distance** (radius around the V2; not path distance, walls ignored).
+- Alerts **do not chain**: an alerted enemy does not pass the alert on.
+- **No cooldown** between alerts.
+- Alerts also **wake sleeping enemies** in the radius.
 
-### Ideas carried over from V0 discussion [proposed]
-- On spotting the player → alerts enemies within a radius (e.g. 10–15 m, or same maze chunk), sending them the player's position.
-- Alerted enemies go to that position (GoToLastKnown) even if they never saw the player.
-- Possible audible/visual "shout" cue so the player knows they were reported.
+### Ideas [proposed]
+- Triggered when the V2 spots the player; sends the player's current position.
+- Alerted enemies go to that position (GoToLastKnown → Wait → Wander) even if they never saw the player.
+- Alert radius 10–15 m.
+- Audible/visual "shout" cue so the player knows they were reported.
 - Optional: max chase time / give-up logic tuned for groups.
 
 ### Open questions
-1. Who gets alerted: only V2s, or all enemy types?
-2. Alert radius: distance, path distance through the maze, or line of sight between enemies?
-3. Does the alert chain (alerted enemy alerts further)?
-4. Is there a cooldown between alerts?
+1. With no cooldown: alert once per sighting, or repeatedly while it keeps seeing the player (e.g. every sight check updates the others)?
+2. Alert radius value.
 
 ---
 

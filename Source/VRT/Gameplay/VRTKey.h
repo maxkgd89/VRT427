@@ -22,8 +22,12 @@ public:
 
 	bool IsCollected() const { return bCollected; }
 
+	/** Where the beacon stands relative to the key, horizontal, cm (World axes). Call before the key begins play. */
+	void SetBeaconOffset(const FVector2D& InOffset) { BeaconOffset = InOffset; }
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnPlayerEntered(AVRTPawn* Pawn) override;
 

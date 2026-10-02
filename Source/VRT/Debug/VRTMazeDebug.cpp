@@ -3,6 +3,9 @@
 //   VRT.Maze.Generate [Width Height Seed BraidFraction RoomCount NewestBias DrawScale]
 //   VRT.Maze.Clear
 //   VRT.Maze.Build [Width Height Seed BraidFraction RoomCount NewestBias]   (rebuilds the AVRTMazeBuilder in the level and moves you to its spawn)
+//   VRT.Maze.Level N       (fades out and goes to level N of the maze progression: size, seed and rooms follow the level)
+//   VRT.Nav.Status         (is the navigation mesh building? how big is its area?)
+//   VRT.Nav.Test          (check again that the spawn reaches every key on the navigation mesh)
 //   VRT.Maze.SelfTest      (generator checks over many sizes and seeds; no world or headset needed)
 //
 // The maze is drawn as a miniature with debug lines in front of the player and printed as text to LogVRTMaze.
@@ -14,6 +17,9 @@
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
+#include "Debug/VRTMazeMapDraw.h"
+#include "Gameplay/VRTGameMode.h"
+#include "Level/VRTLevelProgression.h"
 #include "Level/VRTMazeBuilder.h"
 #include "Level/VRTMazeData.h"
 #include "Level/VRTMazeGenerator.h"
@@ -24,59 +30,6 @@ namespace
 	/** Real cell size the miniature represents, cm (plan 10.4: 4 m cells). */
 	constexpr float CellSizeCm = 400.f;
 	constexpr float WallHeightCm = 200.f;
-
-	void DrawMaze(UWorld* World, const FVRTMazeData& Maze, const FVector& Origin, float Scale)
-	{
-		const float Cell = CellSizeCm * Scale;
-		const float Wall = WallHeightCm * Scale;
-		const FColor WallColor = FColor::White;
-
-		auto Corner = [&](float X, float Y, float Z)
-		{
-			return Origin + FVector(X * Cell, Y * Cell, Z);
-		};
-
-		auto DrawWall = [&](float X0, float Y0, float X1, float Y1)
-		{
-			DrawDebugLine(World, Corner(X0, Y0, 0.f), Corner(X1, Y1, 0.f), WallColor, true, -1.f, 0, 0.15f);
-			DrawDebugLine(World, Corner(X0, Y0, Wall), Corner(X1, Y1, Wall), WallColor, true, -1.f, 0, 0.15f);
-			DrawDebugLine(World, Corner(X0, Y0, 0.f), Corner(X0, Y0, Wall), WallColor, true, -1.f, 0, 0.15f);
-			DrawDebugLine(World, Corner(X1, Y1, 0.f), Corner(X1, Y1, Wall), WallColor, true, -1.f, 0, 0.15f);
-		};
-
-		for (int32 Y = 0; Y < Maze.Height; ++Y)
-		{
-			for (int32 X = 0; X < Maze.Width; ++X)
-			{
-				const FIntPoint P(X, Y);
-				// Each wall is shared, so draw north and west of every cell plus the south / east border.
-				if (Maze.HasWall(P, EVRTMazeDir::North)) { DrawWall(X, Y, X + 1, Y); }
-				if (Maze.HasWall(P, EVRTMazeDir::West)) { DrawWall(X, Y, X, Y + 1); }
-				if (Y == Maze.Height - 1 && Maze.HasWall(P, EVRTMazeDir::South)) { DrawWall(X, Y + 1, X + 1, Y + 1); }
-				if (X == Maze.Width - 1 && Maze.HasWall(P, EVRTMazeDir::East)) { DrawWall(X + 1, Y, X + 1, Y + 1); }
-
-				// Cell markers: spawn green, dead end orange, room cyan.
-				const FVRTMazeCell& C = Maze.CellAt(P);
-				const FVector Center = Corner(X + 0.5f, Y + 0.5f, 0.f);
-				if (C.HasFlag(EVRTMazeCellFlag::Spawn))
-				{
-					DrawDebugSphere(World, Center + FVector(0.f, 0.f, Wall * 0.5f), Cell * 0.3f, 8, FColor::Green, true, -1.f, 0, 0.2f);
-				}
-				else if (C.HasFlag(EVRTMazeCellFlag::Key))
-				{
-					DrawDebugSphere(World, Center + FVector(0.f, 0.f, Wall * 0.5f), Cell * 0.25f, 8, FColor::Yellow, true, -1.f, 0, 0.2f);
-				}
-				else if (C.HasFlag(EVRTMazeCellFlag::DeadEnd))
-				{
-					DrawDebugPoint(World, Center + FVector(0.f, 0.f, 0.5f), Cell * 0.35f, FColor::Orange, true, -1.f, 0);
-				}
-				else if (C.HasFlag(EVRTMazeCellFlag::Room))
-				{
-					DrawDebugPoint(World, Center + FVector(0.f, 0.f, 0.5f), Cell * 0.2f, FColor::Cyan, true, -1.f, 0);
-				}
-			}
-		}
-	}
 
 	void GenerateCommand(const TArray<FString>& Args, UWorld* World)
 	{
@@ -100,8 +53,8 @@ namespace
 
 		VRT_LOG(LogVRTMaze, Log, "Generated maze seed=%d grid=%dx%d newestBias=%.2f braid=%.2f rooms=%d(+hub %d) in %.2f ms",
 			Maze.Seed, Maze.Width, Maze.Height, Params.NewestBias, Params.BraidFraction, Params.RoomCount, Params.SpawnHubSize, Stats.GenerationMs);
-		VRT_LOG(LogVRTMaze, Log, "Rooms carved=%d, dead ends %d -> %d after braiding, reachable %d/%d cells, longest path from spawn=%d cells",
-			Stats.RoomsCarved, Stats.DeadEndsBeforeBraid, Stats.DeadEndsAfterBraid, Stats.CellsReachable, Maze.Width * Maze.Height, Maze.MaxDistance);
+		VRT_LOG(LogVRTMaze, Log, "Rooms carved=%d, keys placed=%d, dead ends %d -> %d after braiding, reachable %d/%d cells, longest path from spawn=%d cells",
+			Stats.RoomsCarved, Stats.KeysPlaced, Stats.DeadEndsBeforeBraid, Stats.DeadEndsAfterBraid, Stats.CellsReachable, Maze.Width * Maze.Height, Maze.MaxDistance);
 		for (const FString& Line : Maze.ToAsciiLines())
 		{
 			VRT_LOG(LogVRTMaze, Log, "%s", *Line);
@@ -116,7 +69,7 @@ namespace
 			Center = Pawn->GetActorLocation() + Forward * (CellSizeCm * Scale * Maze.Height * 0.5f + 80.f) + FVector(0.f, 0.f, 20.f);
 		}
 		const FVector Origin = Center - FVector(Maze.Width * CellSizeCm * Scale * 0.5f, Maze.Height * CellSizeCm * Scale * 0.5f, 0.f);
-		DrawMaze(World, Maze, Origin, Scale);
+		VRTMazeMap::DrawMaze(World, Maze, Origin, Scale, CellSizeCm, WallHeightCm);
 		VRT_LOG(LogVRTMaze, Log, "Miniature drawn at(World)=%s scale=%.3f (VRT.Maze.Clear removes it)", *Origin.ToCompactString(), Scale);
 	}
 
@@ -173,6 +126,24 @@ namespace
 			return TEXT("fewer openings than a spanning tree needs");
 		}
 
+		// Keys: the right number, spread out, away from the spawn, all reachable.
+		TArray<FIntPoint> Keys;
+		for (int32 Y = 0; Y < Maze.Height; ++Y)
+		{
+			for (int32 X = 0; X < Maze.Width; ++X)
+			{
+				if (Maze.CellAt(FIntPoint(X, Y)).HasFlag(EVRTMazeCellFlag::Key)) { Keys.Add(FIntPoint(X, Y)); }
+			}
+		}
+		const int32 ExpectedKeys = FMath::Clamp(Params.KeyCount, 0, 4);
+		if (Cells >= 36 && Keys.Num() != ExpectedKeys) { return FString::Printf(TEXT("expected %d keys, found %d"), ExpectedKeys, Keys.Num()); }
+		if (Keys.Num() > ExpectedKeys) { return TEXT("too many keys"); }
+		for (const FIntPoint& Key : Keys)
+		{
+			if (Key == Maze.SpawnCell) { return TEXT("key in the spawn cell"); }
+			if (Maze.CellAt(Key).Distance <= 0) { return TEXT("key not reachable from the spawn"); }
+		}
+
 		// Spawn cell is tagged and the same params give the same maze.
 		if (!Maze.CellAt(Maze.SpawnCell).HasFlag(EVRTMazeCellFlag::Spawn)) { return TEXT("spawn cell not flagged"); }
 		if (FVRTMazeGenerator::Generate(Params).ToAsciiLines() != Maze.ToAsciiLines()) { return TEXT("not deterministic"); }
@@ -210,9 +181,30 @@ namespace
 			}
 		}
 
+		// Every level of the progression (1-20) must produce a valid maze, within the size cap.
+		for (int32 Level = 1; Level <= 20; ++Level)
+		{
+			const FVRTLevelSettings Settings = VRTLevelProgression::ForLevel(Level);
+			FVRTMazeParams Params;
+			Params.Width = Settings.Size;
+			Params.Height = Settings.Size;
+			Params.NewestBias = Settings.NewestBias;
+			Params.BraidFraction = Settings.Braid;
+			Params.RoomCount = Settings.Rooms;
+			Params.Seed = 1 + Level - 1;
+
+			++Runs;
+			FString Problem = Settings.Size > VRTLevelProgression::MaxSize ? FString(TEXT("level size above the cap")) : CheckMaze(Params, false);
+			if (!Problem.IsEmpty())
+			{
+				++Failures;
+				VRT_LOG(LogVRTMaze, Error, "SelfTest FAIL progression level %d (%dx%d): %s", Level, Settings.Size, Settings.Size, *Problem);
+			}
+		}
+
 		if (Failures == 0)
 		{
-			VRT_LOG(LogVRTMaze, Log, "SelfTest PASS: %d mazes checked (reachability, wall symmetry, border, determinism, spanning tree)", Runs);
+			VRT_LOG(LogVRTMaze, Log, "SelfTest PASS: %d mazes checked (reachability, wall symmetry, border, determinism, spanning tree, key placement, level progression 1-20)", Runs);
 		}
 		else
 		{
@@ -256,14 +248,77 @@ namespace
 		if (Args.IsValidIndex(4)) { Builder->RoomCount = FMath::Max(0, FCString::Atoi(*Args[4])); }
 		if (Args.IsValidIndex(5)) { Builder->NewestBias = FMath::Clamp(FCString::Atof(*Args[5]), 0.f, 1.f); }
 
-		Builder->GenerateAndBuild();
+		// Explicit parameters replace the level progression until VRT.Maze.Level turns it back on.
+		Builder->bUseLevelProgression = false;
+		const AVRTGameMode* GameMode = World->GetAuthGameMode<AVRTGameMode>();
+		Builder->GenerateAndBuild(GameMode ? GameMode->GetLevelIndex() : 1);
 		Builder->PlacePawnAtSpawn(UGameplayStatics::GetPlayerPawn(World, 0));
 	}
+
+	void LevelCommand(const TArray<FString>& Args, UWorld* World)
+	{
+		AVRTGameMode* GameMode = World ? World->GetAuthGameMode<AVRTGameMode>() : nullptr;
+		if (!GameMode || Args.Num() < 1)
+		{
+			VRT_LOG(LogVRTMaze, Warning, "Usage: VRT.Maze.Level <level number> (needs the game mode of a running game)");
+			return;
+		}
+
+		for (TActorIterator<AVRTMazeBuilder> It(World); It; ++It)
+		{
+			It->bUseLevelProgression = true;
+		}
+		GameMode->GoToLevel(FMath::Max(1, FCString::Atoi(*Args[0])));
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs GMazeLevel(
+		TEXT("VRT.Maze.Level"),
+		TEXT("Goes to level N of the maze progression (fade, new maze with that level's size and seed). Args: <level>"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&LevelCommand));
 
 	FAutoConsoleCommandWithWorldAndArgs GMazeBuild(
 		TEXT("VRT.Maze.Build"),
 		TEXT("Rebuilds the maze geometry of the AVRTMazeBuilder in the level. Args: [Width Height Seed BraidFraction RoomCount NewestBias]"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&BuildCommand));
+
+	AVRTMazeBuilder* FindBuilder(UWorld* World)
+	{
+		for (TActorIterator<AVRTMazeBuilder> It(World); It; ++It)
+		{
+			return *It;
+		}
+		return nullptr;
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs GNavStatus(
+		TEXT("VRT.Nav.Status"),
+		TEXT("Logs the state of the navigation mesh (LogVRTNav)."),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
+		{
+			if (AVRTMazeBuilder* Builder = World ? FindBuilder(World) : nullptr)
+			{
+				Builder->LogNavigationStatus();
+			}
+			else
+			{
+				VRT_LOG(LogVRTNav, Warning, "No AVRTMazeBuilder in this level");
+			}
+		}));
+
+	FAutoConsoleCommandWithWorldAndArgs GNavTest(
+		TEXT("VRT.Nav.Test"),
+		TEXT("Checks that the navigation mesh connects the spawn to every key (LogVRTNav)."),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
+		{
+			if (AVRTMazeBuilder* Builder = World ? FindBuilder(World) : nullptr)
+			{
+				Builder->ValidateNavigation();
+			}
+			else
+			{
+				VRT_LOG(LogVRTNav, Warning, "No AVRTMazeBuilder in this level");
+			}
+		}));
 
 	FAutoConsoleCommandWithWorldAndArgs GMazeClear(
 		TEXT("VRT.Maze.Clear"),

@@ -81,6 +81,17 @@ void AVRTKey::BeginPlay()
 	}
 }
 
+void AVRTKey::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	// The beacon belongs to this key: without this, destroying a key (maze rebuilt while playing) leaves a false beam behind.
+	if (Beacon)
+	{
+		Beacon->Destroy();
+		Beacon = nullptr;
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
 void AVRTKey::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);

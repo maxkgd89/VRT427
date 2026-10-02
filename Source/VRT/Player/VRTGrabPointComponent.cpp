@@ -8,6 +8,7 @@ UVRTGrabPointComponent::UVRTGrabPointComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetCollisionProfileName(VRTCollision::GrabPointProfile);
 	SetGenerateOverlapEvents(true);
+	SetCanEverAffectNavigation(false);
 	SetHiddenInGame(true);
 	bUseAttachParentBound = false;
 	InitSphereRadius(GrabRadius);

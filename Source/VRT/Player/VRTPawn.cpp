@@ -8,6 +8,9 @@
 #include "MotionControllerComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Debug/VRTMazeMapDraw.h"
+#include "EngineUtils.h"
+#include "Level/VRTMazeBuilder.h"
 #include "Gameplay/VRTGameState.h"
 #include "Debug/VRTDebugSettings.h"
 #include "Player/VRTHandComponent.h"
@@ -28,6 +31,7 @@ AVRTPawn::AVRTPawn()
 	Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
 	Capsule->InitCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
 	Capsule->SetCollisionProfileName(VRTCollision::PlayerProfile);
+	Capsule->SetCanEverAffectNavigation(false); // the player must not carve a hole into the navigation mesh
 	SetRootComponent(Capsule);
 
 	VROrigin = CreateDefaultSubobject<USceneComponent>(TEXT("VROrigin"));
@@ -113,6 +117,12 @@ AVRTPawn::AVRTPawn()
 	}
 }
 
+void AVRTPawn::NotifyTeleported()
+{
+	bBodyYawInitialized = false;
+	VerticalVelocity = 0.f;
+}
+
 void AVRTPawn::PlayHapticPulseBothHands(float Intensity, float DurationSec)
 {
 	LeftHand->PlayHapticPulse(Intensity, DurationSec);
@@ -154,6 +164,7 @@ void AVRTPawn::BeginPlay()
 	}
 	RefreshWristDisplay();
 
+	VRT_LOG(LogVRTPawn, Log, "floor snap hit actor=%s component=%s at Z(World)=%.1f", *GetNameSafe(Hit.GetActor()), *GetNameSafe(Hit.GetComponent()), Hit.ImpactPoint.Z);
 	VRT_LOG(LogVRTPawn, Log, "mode=%s trackingOrigin=%d floorHit=%d originZ(World)=%.1f cameraZ(World)=%.1f",
 		PlayMode == EVRTPlayMode::Seated ? TEXT("Seated") : TEXT("Standing"), (int32)UHeadMountedDisplayFunctionLibrary::GetTrackingOrigin(), Hit.bBlockingHit ? 1 : 0,
 		VROrigin->GetComponentLocation().Z, Camera->GetComponentLocation().Z);
@@ -169,6 +180,7 @@ void AVRTPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("MoveY"), this, &AVRTPawn::OnMoveForward);
 	PlayerInputComponent->BindAction(TEXT("ToggleRun"), IE_Pressed, this, &AVRTPawn::OnToggleRun);
 	PlayerInputComponent->BindAction(TEXT("RecenterHMD"), IE_Pressed, this, &AVRTPawn::OnRecenter);
+	PlayerInputComponent->BindAction(TEXT("ToggleMap"), IE_Pressed, this, &AVRTPawn::OnToggleMap);
 	PlayerInputComponent->BindAction(FireAction, IE_Pressed, this, &AVRTPawn::OnFirePressed);
 	PlayerInputComponent->BindAction(FireAction, IE_Released, this, &AVRTPawn::OnFireReleased);
 	PlayerInputComponent->BindAction(TEXT("GrabLeft"), IE_Pressed, this, &AVRTPawn::OnGrabLeftPressed);
@@ -176,7 +188,7 @@ void AVRTPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("GrabRight"), IE_Pressed, this, &AVRTPawn::OnGrabRightPressed);
 	PlayerInputComponent->BindAction(TEXT("GrabRight"), IE_Released, this, &AVRTPawn::OnGrabRightReleased);
 
-	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and actions ToggleRun, GrabLeft, GrabRight, RecenterHMD, %s", *FireAction.ToString());
+	VRT_LOG(LogVRTInput, Log, "Bound axes Turn, MoveX, MoveY and actions ToggleRun, GrabLeft, GrabRight, RecenterHMD, ToggleMap, %s", *FireAction.ToString());
 }
 
 void AVRTPawn::OnConstruction(const FTransform& Transform)
@@ -261,6 +273,81 @@ void AVRTPawn::OnRecenter()
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 	bBodyYawInitialized = false; // the body yaw re-aligns with the new forward on the next tick
 	VRT_LOG(LogVRTPawn, Log, "HMD recentered (RecenterHMD pressed), playMode=%s", PlayMode == EVRTPlayMode::Seated ? TEXT("Seated") : TEXT("Standing"));
+}
+
+void AVRTPawn::OnToggleMap()
+{
+	if (bMapVisible)
+	{
+		HideMap();
+	}
+	else
+	{
+		ShowMap();
+	}
+}
+
+void AVRTPawn::ShowMap()
+{
+	// The map shows the maze the level is using right now (the builder's data), not a new random one.
+	AVRTMazeBuilder* Builder = nullptr;
+	for (TActorIterator<AVRTMazeBuilder> It(GetWorld()); It; ++It)
+	{
+		Builder = *It;
+		break;
+	}
+	if (!Builder || Builder->GetMaze().Width <= 0)
+	{
+		VRT_LOG(LogVRTMaze, Warning, "Map requested, but this level has no built maze (open the maze map, see Tools/Editor/create_maze_level.py)");
+		return;
+	}
+
+	const FVRTMazeData& Maze = Builder->GetMaze();
+	const float CellSize = Builder->CellSize;
+	MapBuilder = Builder;
+	MapBuildCounter = Builder->GetBuildCounter();
+	MapScale = MapSizeCm / (FMath::Max(Maze.Width, Maze.Height) * CellSize);
+
+	// Spawn it in front of the head, below eye level, and leave it there. Axes follow the world (X east, Y south).
+	FVector Forward = Camera->GetForwardVector().GetSafeNormal2D();
+	if (Forward.IsNearlyZero())
+	{
+		Forward = GetActorForwardVector().GetSafeNormal2D();
+	}
+	const FVector Center = Camera->GetComponentLocation() + Forward * MapDistance - FVector(0.f, 0.f, MapHeightBelowHead);
+	MapOrigin = Center - FVector(Maze.Width * CellSize * MapScale * 0.5f, Maze.Height * CellSize * MapScale * 0.5f, 0.f);
+
+	FlushPersistentDebugLines(GetWorld());
+	VRTMazeMap::DrawMaze(GetWorld(), Maze, MapOrigin, MapScale, CellSize, Builder->WallHeight);
+	bMapVisible = true;
+	VRT_LOG(LogVRTMaze, Log, "Dev map shown: %dx%d maze seed=%d at(World)=%s scale=%.4f", Maze.Width, Maze.Height, Maze.Seed, *MapOrigin.ToCompactString(), MapScale);
+}
+
+void AVRTPawn::HideMap()
+{
+	FlushPersistentDebugLines(GetWorld());
+	bMapVisible = false;
+	MapBuilder = nullptr;
+	VRT_LOG(LogVRTMaze, Log, "Dev map hidden");
+}
+
+void AVRTPawn::UpdateMapMarker() const
+{
+	if (!MapBuilder)
+	{
+		return;
+	}
+
+	// Player position in maze space (X east, Y south, cm), then scaled onto the map.
+	const FVector Local = MapBuilder->GetActorTransform().InverseTransformPosition(GetActorLocation());
+	const FVector Marker = MapOrigin + FVector(Local.X * MapScale, Local.Y * MapScale, 1.5f);
+	DrawDebugSphere(GetWorld(), Marker, 1.2f, 8, FColor::Red, false, -1.f, 0, 0.2f);
+
+	FVector Forward = Camera->GetForwardVector().GetSafeNormal2D();
+	if (!Forward.IsNearlyZero())
+	{
+		DrawDebugDirectionalArrow(GetWorld(), Marker, Marker + Forward * 4.f, 2.f, FColor::Red, false, -1.f, 0, 0.2f);
+	}
 }
 
 void AVRTPawn::OnToggleRun()
@@ -360,7 +447,8 @@ void AVRTPawn::RefreshWristDisplay()
 	{
 		const int32 Missing = FMath::Max(0, State->GetRequiredKeys() - State->GetKeysCollected());
 		const FString ExitLine = Missing > 0 ? FString::Printf(TEXT("EXIT NEEDS %d MORE"), Missing) : FString(TEXT("EXIT OPEN"));
-		Text = FString::Printf(TEXT("KEYS %d/%d\n%s\nLEVEL %d"), State->GetKeysCollected(), State->GetKeysTotal(), *ExitLine, State->GetLevelIndex());
+		Text = FString::Printf(TEXT("KEYS %d/%d\n%s\nLEVEL %d  %dx%d\nSEED %d"), State->GetKeysCollected(), State->GetKeysTotal(), *ExitLine,
+			State->GetLevelIndex(), State->GetMazeWidth(), State->GetMazeHeight(), State->GetMazeSeed());
 	}
 	WristDisplay->SetText(FText::FromString(Text));
 	VRT_LOG(LogVRTGameFlow, Verbose, "Wrist display: %s", *Text.Replace(TEXT("\n"), TEXT(" | ")));
@@ -381,6 +469,18 @@ void AVRTPawn::Tick(float DeltaSeconds)
 		Camera->PostProcessBlendWeight = 1.f;
 		Camera->PostProcessSettings.bOverride_VignetteIntensity = true;
 		Camera->PostProcessSettings.VignetteIntensity = CurrentVignette;
+	}
+
+	if (bMapVisible)
+	{
+		if (!MapBuilder || MapBuilder->GetBuildCounter() != MapBuildCounter)
+		{
+			// The maze was rebuilt (new level or VRT.Maze.Build): show the new one in the same place.
+			VRT_LOG(LogVRTMaze, Log, "Maze changed while the dev map was open, redrawing it");
+			HideMap();
+			ShowMap();
+		}
+		UpdateMapMarker();
 	}
 
 	// Text is readable from its +X side, so point +X at the head.

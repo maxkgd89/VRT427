@@ -2,6 +2,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
+#include "Gameplay/VRTBeacon.h"
 #include "Gameplay/VRTGameMode.h"
 #include "Gameplay/VRTGameState.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -51,12 +52,36 @@ void AVRTLevelExit::BeginPlay()
 		Pad->SetMaterial(0, PadMaterial);
 	}
 
+	// Yellow beacon on the floor under the exit. It only shows once the exit is open (see RefreshVisual).
+	FActorSpawnParameters BeaconParams;
+	BeaconParams.Owner = this;
+	BeaconParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	BeaconParams.bDeferConstruction = true;
+	const FTransform BeaconTransform(GetActorLocation() - FVector(0.f, 0.f, FloorOffset));
+	Beacon = GetWorld()->SpawnActor<AVRTBeacon>(AVRTBeacon::StaticClass(), BeaconTransform, BeaconParams);
+	if (Beacon)
+	{
+		Beacon->SetColor(BeaconColor);
+		Beacon->FinishSpawning(BeaconTransform);
+		Beacon->SetActive(false);
+	}
+
 	if (AVRTGameState* State = GetWorld()->GetGameState<AVRTGameState>())
 	{
 		State->SetRequiredKeys(RequiredKeys);
 		State->OnProgressChanged.AddDynamic(this, &AVRTLevelExit::RefreshVisual);
 	}
 	RefreshVisual();
+}
+
+void AVRTLevelExit::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (Beacon)
+	{
+		Beacon->Destroy();
+		Beacon = nullptr;
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void AVRTLevelExit::RefreshVisual()
@@ -66,6 +91,14 @@ void AVRTLevelExit::RefreshVisual()
 	if (PadMaterial)
 	{
 		PadMaterial->SetVectorParameterValue(TEXT("Color"), bOpen ? OpenColor : ClosedColor);
+	}
+	if (Beacon)
+	{
+		if (Beacon->IsHidden() == bOpen)
+		{
+			VRT_LOG(LogVRTGameFlow, Log, "Exit beacon %s (keys %d, need %d)", bOpen ? TEXT("on") : TEXT("off"), State ? State->GetKeysCollected() : 0, RequiredKeys);
+		}
+		Beacon->SetActive(bOpen);
 	}
 }
 

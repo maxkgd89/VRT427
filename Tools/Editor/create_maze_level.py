@@ -1,6 +1,6 @@
-"""Creates /Game/VRT/Maps/L_Maze1 (see MAP_NAME): the procedural maze map (plan step 10).
+"""Creates /Game/VRT/Maps/L_Maze3 (see MAP_NAME): the procedural maze map (plan step 10).
 
-The map only holds lights, fog and one AVRTMazeBuilder. The builder generates the maze and builds the walls, the
+The map only holds lights, fog, one AVRTMazeBuilder and a NavMeshBoundsVolume (the builder resizes it to each maze). The builder generates the maze and builds the walls, the
 floor and the PlayerStart when the game starts, so nothing about the maze itself is baked into the map.
 Change the maze in the editor: select MazeBuilder and edit its "VRT|Maze" properties (size, seed, braiding, rooms).
 
@@ -10,7 +10,7 @@ Run inside the UE 4.27 editor (Python Editor Script Plugin and Editor Scripting 
 import unreal
 
 # Naming rule (same as create_test_level.py): bump the number whenever this script changes, keep old maps.
-MAP_NAME = "L_Maze1"
+MAP_NAME = "L_Maze3"
 MAP_PATH = "/Game/VRT/Maps/" + MAP_NAME
 
 
@@ -22,7 +22,9 @@ def main():
             unreal.log_error("Could not open level " + MAP_PATH)
             return
         for actor in unreal.EditorLevelLibrary.get_all_level_actors():
-            if isinstance(actor, (unreal.WorldSettings, unreal.Brush)):
+            # Keep the world settings and the level's default builder brush. A NavMeshBoundsVolume is also a Brush
+            # subclass, so compare the exact class name, otherwise old volumes pile up with every run.
+            if actor.get_class().get_name() in ("WorldSettings", "Brush"):
                 continue
             unreal.EditorLevelLibrary.destroy_actor(actor)
     elif not unreal.EditorLevelLibrary.new_level(MAP_PATH):
@@ -32,6 +34,15 @@ def main():
     builder = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.VRTMazeBuilder, unreal.Vector(0, 0, 0))
     builder.set_actor_label("MazeBuilder")
     builder.set_folder_path("Maze")
+
+    # Navigation: the builder fits this volume to every maze it builds. Any size works as a starting point.
+    try:
+        nav = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.NavMeshBoundsVolume, unreal.Vector(1600, 1600, 250))
+        nav.set_actor_label("NavMeshBounds")
+        nav.set_folder_path("Maze")
+        nav.set_actor_scale3d(unreal.Vector(20, 20, 5))
+    except Exception as exc:
+        unreal.log_warning("Could not place a NavMeshBoundsVolume (%s). Place one by hand: Place Actors > Volumes > Nav Mesh Bounds Volume." % exc)
 
     # Lighting: all movable, nothing baked (the maze is different every run).
     sun = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 500), unreal.Rotator(0, -50, 30))
@@ -48,7 +59,7 @@ def main():
     unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 100)).set_actor_label("Fog")
 
     unreal.EditorLevelLibrary.save_current_level()
-    unreal.log(MAP_NAME + " created: one MazeBuilder, sun, sky light, atmosphere and fog")
+    unreal.log(MAP_NAME + " created: one MazeBuilder, a NavMeshBoundsVolume, sun, sky light, atmosphere and fog")
 
 
 main()

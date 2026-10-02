@@ -4,6 +4,7 @@
 #include "GameFramework/Pawn.h"
 #include "VRTPawn.generated.h"
 
+class AVRTMazeBuilder;
 class UCameraComponent;
 class UCapsuleComponent;
 class UFloatingPawnMovement;
@@ -29,6 +30,9 @@ class VRT_API AVRTPawn : public APawn
 
 public:
 	AVRTPawn();
+
+	/** Call after the pawn was moved to a new place (new level): the body yaw and fall speed start fresh. */
+	void NotifyTeleported();
 
 	/** Short vibration on both controllers (pickups, level feedback). Intensity 0-1, duration in seconds. */
 	void PlayHapticPulseBothHands(float Intensity = 0.5f, float DurationSec = 0.15f);
@@ -86,6 +90,14 @@ protected:
 	void OnFirePressed();
 	void OnFireReleased();
 
+	/** Menu button (ToggleMap): shows or hides the dev map, a miniature of the level's current maze. */
+	void OnToggleMap();
+	void ShowMap();
+	void HideMap();
+
+	/** Draws the "you are here" marker on the map. Called every tick while the map is visible. */
+	void UpdateMapMarker() const;
+
 	void OnGrabLeftPressed();
 	void OnGrabLeftReleased();
 	void OnGrabRightPressed();
@@ -96,6 +108,15 @@ protected:
 
 	/** Applies the radial dead zone to the stored stick input and moves the pawn. */
 	void ApplyMoveInput();
+
+	/** Dev map state. The map is drawn once with persistent debug lines, so it stays fixed in the world. */
+	bool bMapVisible = false;
+	FVector MapOrigin = FVector::ZeroVector;
+	float MapScale = 0.01f;
+	int32 MapBuildCounter = -1;
+
+	UPROPERTY(Transient)
+	AVRTMazeBuilder* MapBuilder = nullptr;
 
 	/** Current vignette strength; follows the stick deflection when bComfortVignette is on. */
 	float CurrentVignette = 0.f;
@@ -137,6 +158,18 @@ protected:
 	/** How quickly the vignette fades in and out (higher is faster). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Comfort", meta = (ClampMin = "0.1"))
 	float VignetteFadeSpeed = 4.f;
+
+	/** Longest side of the dev map miniature, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Map", meta = (ClampMin = "20.0"))
+	float MapSizeCm = 100.f;
+
+	/** How far in front of the head the map centre appears, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Map", meta = (ClampMin = "30.0"))
+	float MapDistance = 100.f;
+
+	/** How far below the head the map floats, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Map")
+	float MapHeightBelowHead = 35.f;
 
 	/** Walk speed in cm/s. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")

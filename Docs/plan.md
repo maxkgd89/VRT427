@@ -31,7 +31,7 @@ Source/VRT/
   Weapons/     VRTWeaponBase, VRTPistol, VRTRifle, VRTProjectile
   Gameplay/    VRTGameMode, VRTGameState, VRTKey, VRTBeacon, VRTLevelExit, VRTTriggerBase
   Level/       VRTMazeGenerator, VRTMazeData, VRTMazeBuilder        (step 10)
-  AI/          VRTEnemy, VRTEnemyController, VRTDirector            (step 11+)
+  AI/          VRTEnemy (+ V0/V1/V2), VRTEnemyController, VRTNoiseSubsystem, VRTDirector   (steps 13–14)
   Combat/      VRTHealthComponent, VRTDamageTypes                   (step 11+)
   UI/          VRTWristDisplay                                      (step 8–9)
   Debug/       VRTDebugSettings (console vars)
@@ -52,6 +52,9 @@ Source/VRT/
 | `AVRTLevelExit` | AVRTTriggerBase | At spawn. Checks key count ≥ `RequiredKeys` (2) and completes the level. |
 | `AVRTGameState` | AGameStateBase | Keys collected and keys total, level index, seed, level state. |
 | `AVRTGameMode` | AGameModeBase | Exists already. Level flow: Start → Playing → Complete → next level. |
+| `AVRTEnemy` | APawn | Step 13. Capsule, static mesh, `UFloatingPawnMovement`, health. Subclasses `AVRTEnemyV0/V1/V2` set feature flags and tunables. |
+| `AVRTEnemyController` | AAIController | Step 13. Pure C++ state machine, sight checks, spawn mode (roaming / sleeping). |
+| `UVRTNoiseSubsystem` | UWorldSubsystem | Step 13. Weapons report gunshots; sleeping enemies and V1 listen. |
 
 ### Engine modules to add to `VRT.Build.cs` (as needed)
 `UMG`, `Slate`, `SlateCore` (wrist UI) · `AIModule`, `NavigationSystem`, `GameplayTasks` (AI, steps 11+).
@@ -207,6 +210,8 @@ Walk speed 1.5 m/s, run 3.5 m/s.
 
 Grow the size per level; also scale braiding, number of rooms and enemy budget.
 
+*Implemented in `Source/VRT/Level/VRTLevelProgression.h`:* levels 1 / 2-3 / 4-6 / 7-9 / 10-12 / 13-15 / 16+ use 8 / 12 / 16 / 20 / 24 / 28 / 32 cells per side. Rooms grow 2 to 6, braiding 15% to 30%, the Growing Tree bias drops from 0.75 to 0.55 (bushier). Level N uses seed + N - 1. Levels are built in place behind a fade (`AVRTGameMode::GoToLevel`); maps without a maze builder still reload with `?Level=N`.
+
 ### 10.6 Streaming and level division
 - **Level streaming (sublevels / World Composition) is not needed.** It is designed for hand-authored content. A procedural maze up to about 130 m with HISM walls fits easily in one level in memory (a few thousand instances).
 - **Chunking is worth doing.** Split the maze into chunks of 8 × 8 cells (32 m), each with its own HISM component. This gives:
@@ -245,12 +250,57 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
   - Decide later.
 - Ammo pickups (trigger volumes, same base as keys). Ammo count on the wrist display and/or on the weapon.
 
-### Step 13 — Enemy base
-- `AVRTEnemy` (ACharacter, CharacterMovement on NavMesh) plus `AVRTEnemyController` (AAIController).
-- Logic: C++ finite state machine or a Behavior Tree with C++ tasks and services. **StateTree is not available in 4.27.** Recommendation: BT plus C++ tasks, or a pure C++ FSM for full control.
-- `UAIPerceptionComponent`: sight (walls block it), hearing (gunshots via `ReportNoiseEvent`).
-- States: Idle / Wander → Alert → Chase → Attack (melee or ranged) → Search → Return.
-- First enemy types: a melee rusher (L4D "common") and a ranged shooter. Later, specials.
+### Step 13 — Enemy AI iterations (V0 → V1 → V2)
+**Design source: `Docs/enemies.md`** (behaviour, parameters, decisions per enemy type). This step implements that file; it doesn't redesign it. Values marked [proposed] there are starting values for tuning.
+
+Prerequisites: 10.5 (runtime NavMesh) and Step 11 (health and damage: melee hits on the player, enemy health).
+
+Rules for the whole step:
+- **Pure C++.** State machine in `AVRTEnemyController`. No Behavior Trees, no Blueprints. The V0/V1/V2 types are thin C++ subclasses that only set defaults, so the director can spawn them by class.
+- **No animation.** Solid static meshes (engine primitives). All feedback in code: colour/emissive per state via a dynamic material instance, scale pulse, lean, flash before an attack, scale-out on death.
+- **Walls block sight** both ways: "sees the player" = range + FOV + line trace, never distance alone.
+- Logging in `LogVRTAI`: every state change as `Old -> New (reason)`, every perception event (seen, lost, heard shot, woke, alerted, was alerted).
+- Debug cvar `VRT.Debug.AI 1`: sight cone and trace line (green clear / red blocked), last known location, wake spheres, alert radius, and the current state as world-space text above the enemy (visible in the HMD).
+- Each sub-step ends with a headset test: first with hand-placed enemies in `L_Test`, then in the maze.
+
+#### 13.1 Enemy base
+- `AVRTEnemy` (`APawn`): capsule root, `UStaticMeshComponent`, `UFloatingPawnMovement`, `UVRTHealthComponent`. Movement through `AAIController::MoveToLocation` / `MoveToActor` on the NavMesh.
+- `AVRTEnemyController` (`AAIController`): `EVRTEnemyState` and a switch-based state machine. Timers instead of Tick where possible.
+- Feature flags on the base class (`bCanHear`, `bCanAlert`). `AVRTEnemyV0`, `AVRTEnemyV1` and `AVRTEnemyV2` set them, plus their tunables.
+- Collision: new object channel **Enemy** and profile `VRTEnemy` (blocks WorldStatic, Pawn and Projectile). Projectiles damage enemies.
+- `VRT.Build.cs`: `AIModule`, `NavigationSystem`, `GameplayTasks`.
+- **Test:** a placed enemy stands still, flashes on each hit, and scales out and disappears after 3 pistol hits.
+
+#### 13.2 V0 senses and wandering
+- Sight: own C++ check every 0.2 s (staggered between enemies). Range 15 m, FOV 120°, line trace from the enemy's eye to the player HMD, blocked by WorldStatic. 0.5 s grace before "lost".
+- Wander: random reachable NavMesh point 8–12 m away, then a 1–3 s pause.
+- **Test:** the enemy wanders. Stepping into its view logs "seen" and turns the debug line green. A wall between you and it blocks detection.
+
+#### 13.3 V0 full state machine
+- Wander → Chase (3.0 m/s) → Attack (melee only, 1.5 m, 10 damage every 1 s) → GoToLastKnown → Wait (4 s) → Wander. Seeing the player from any state → Chase.
+- Gives up only at the last known location when the player is still not visible. No hearing, no alerting.
+- Colour per state (e.g. grey Wander, red Chase, orange Wait). Flash before each hit.
+- **Test:** get chased and hit, run around a corner, then watch V0 go to the spot where it lost you, wait there and resume wandering.
+
+#### 13.4 Spawn modes: roaming and sleeping (V0, V1, V2)
+- `EVRTSpawnMode { Roaming, Sleeping }`. Roaming starts in Wander.
+- Gunshot events: weapons report each shot to a world subsystem (`UVRTNoiseSubsystem::ReportGunshot(LocationWorld)`, with a delegate). Sleeping enemies (and V1 in 13.5) listen to it. No `UAIPerceptionComponent`.
+- Sleeping: no sight. Approach sphere 3 m → wake → Chase. Gunshot sphere 15 m → wake → go to the shot location. Spheres ignore walls. Wake-up delay 0.5–1 s with a visible cue. Never sleeps again; after waking it behaves as roaming.
+- Sleeping visuals: dim colour, slow "breathing" scale pulse.
+- **Test:** sneak past a sleeping V0 at more than 3 m without waking it. Walk inside 3 m and it wakes and chases. Shoot within 15 m (even behind a wall) and it wakes and goes to the shot spot.
+
+#### 13.5 V1 — Listener
+- V0 plus awake hearing of **gunshots only**, through walls, using the same gunshot events → goes to the shot location. Sight wins over hearing.
+- Hearing range and redirect-on-new-shot: from `Docs/enemies.md` (still open there; decide before this sub-step).
+- **Test:** shoot behind a wall out of its sight; V1 comes to the shot spot, waits, wanders.
+
+#### 13.6 V2 — Social
+- V0 plus alerting: on sighting the player, alerts **every enemy type** within a straight-line radius (walls ignored), passing the player's position. Alerted enemies go there (GoToLastKnown → Wait → Wander). Alerts don't chain and have no cooldown. Alerts also wake sleeping enemies in the radius.
+- Visual/audio "shout" cue when it alerts.
+- **Test:** let a V2 see you with a V0 and a sleeping V1 nearby but out of sight; both come to your position.
+
+#### 13.7 AI performance check
+- 20+ mixed enemies in a large maze: `stat unit`, `stat game`, AI tick cost. Sight checks staggered; enemies far from the player have tick and timers paused (prepares for the director's pool in Step 14).
 
 ### Step 14 — AI Director and spawning
 - `AVRTDirector` (actor or `UWorldSubsystem`) reads the maze flow-distance field and the player's progress.
@@ -259,12 +309,13 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
   - beyond a minimum distance;
   - in chunks ahead of or behind the player along the path.
 - Uses the enemy pool.
+- Chooses the enemy type (V0 / V1 / V2, more later) and spawn mode (roaming or sleeping) per spawn. Sleeping enemies suit dead ends, rooms and key cells (the player decides whether to risk sneaking past).
 - Intensity model (L4D style): build-up → peak → relax, tracked from damage taken, kills and time. Spawns pause in the relax phase.
 - Waves get triggered by events: picking up a key, getting near the exit with ≥ 2 keys.
 - Per-level budget grows with level index and maze size.
 
 ### Step 15 — Combat polish
-- Hit reactions, death, ragdoll or simple dissolve.
+- Hit reactions and death without animation or ragdoll: flash, knock-back, dissolve or scale-out (enemies are static meshes).
 - Muzzle flash, impact VFX (Niagara), sounds, enemy audio cues (important in a maze with 2 m walls).
 - Balance: fire rates, damage, enemy health, enemy counts.
 
@@ -283,6 +334,8 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - Key status: **wrist display** on the left wrist.
 - Development and testing are done **seated**: `AVRTPawn::PlayMode = Seated` (eye-level tracking, recentered, eyes at `SeatedEyeHeight` = 150 cm). Standing mode stays in the code; a runtime stand/seat switch comes later.
 - Holsters follow the head yaw slowly (dead zone `BodyYawDeadZone` 35°, then `BodyYawFollowSpeed` 90°/s); snap turns rotate the body instantly.
+- Enemy AI: **pure C++** (state machine, no Behavior Trees, no Blueprints where C++ can do it). **No animation**: enemies are solid static meshes. Enemy designs live in `Docs/enemies.md`.
+- Enemy types: **V0** basic (sight, melee), **V1** + hearing gunshots, **V2** + alerting others. Each can spawn **roaming** or **sleeping**.
 
 ## 7. Open questions
 - None at the moment.
@@ -299,9 +352,21 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - [ ] Step 9 — Integration, debug and performance pass
 - [ ] Step 10 — Procedural labyrinth
   - [x] 10.1 Maze data, Growing Tree generator, braiding, rooms, spawn hub, seeded, debug draw (`VRT.Maze.*`)
-  - [ ] 10.2 `AVRTMazeBuilder`: chunked HISM walls, floor, PlayerStart
-  - [ ] 10.3 Key and beacon placement via BFS, exit at spawn
-  - [ ] 10.4 GameMode regenerates on next level (seed+1, bigger)
-  - [ ] 10.5 Runtime NavMesh rebuild
+  - [x] 10.2 `AVRTMazeBuilder`: chunked HISM walls, floor, PlayerStart
+  - [x] 10.3 Key and beacon placement via BFS, exit at spawn
+  - [x] 10.4 GameMode regenerates on next level (seed+1, bigger)
+  - [x] 10.5 Runtime NavMesh rebuild
   - [ ] 10.6 Performance check on the max size
-- [ ] Step 11+ — Combat and AI
+- [ ] Step 11 — Health and damage
+- [ ] Step 12 — Ammo and reload
+- [ ] Step 13 — Enemy AI iterations (V0 → V1 → V2)
+  - [ ] 13.1 Enemy base (pawn, controller, health, collision)
+  - [ ] 13.2 V0 senses and wandering
+  - [ ] 13.3 V0 full state machine
+  - [ ] 13.4 Spawn modes: roaming and sleeping
+  - [ ] 13.5 V1 — Listener
+  - [ ] 13.6 V2 — Social
+  - [ ] 13.7 AI performance check
+- [ ] Step 14 — AI Director and spawning
+- [ ] Step 15 — Combat polish
+- [ ] Step 16 — Quest standalone

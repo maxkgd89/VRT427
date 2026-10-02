@@ -65,41 +65,54 @@ int32 FVRTMazeData::OpenCount(const FIntPoint& P) const
 	return Count;
 }
 
-int32 FVRTMazeData::ComputeDistances(const FIntPoint& Start)
+void FVRTMazeData::ComputeDistanceField(const FIntPoint& Start, TArray<int32>& OutDistances) const
 {
-	for (FVRTMazeCell& Cell : Cells)
-	{
-		Cell.Distance = INDEX_NONE;
-	}
-	MaxDistance = 0;
+	OutDistances.Init(INDEX_NONE, Cells.Num());
 	if (!IsInside(Start))
 	{
-		return 0;
+		return;
 	}
 
 	TArray<FIntPoint> Queue;
 	Queue.Reserve(Cells.Num());
 	Queue.Add(Start);
-	CellAt(Start).Distance = 0;
+	OutDistances[Index(Start)] = 0;
 
 	int32 Head = 0;
 	while (Head < Queue.Num())
 	{
 		const FIntPoint P = Queue[Head++];
-		const int32 D = CellAt(P).Distance;
-		MaxDistance = FMath::Max(MaxDistance, D);
+		const int32 D = OutDistances[Index(P)];
 		for (int32 Dir = 0; Dir < VRTMaze::DirCount; ++Dir)
 		{
 			const EVRTMazeDir Direction = static_cast<EVRTMazeDir>(Dir);
 			const FIntPoint N = Neighbor(P, Direction);
-			if (IsInside(N) && !HasWall(P, Direction) && CellAt(N).Distance == INDEX_NONE)
+			if (IsInside(N) && !HasWall(P, Direction) && OutDistances[Index(N)] == INDEX_NONE)
 			{
-				CellAt(N).Distance = D + 1;
+				OutDistances[Index(N)] = D + 1;
 				Queue.Add(N);
 			}
 		}
 	}
-	return Queue.Num();
+}
+
+int32 FVRTMazeData::ComputeDistances(const FIntPoint& Start)
+{
+	TArray<int32> Field;
+	ComputeDistanceField(Start, Field);
+
+	int32 Reached = 0;
+	MaxDistance = 0;
+	for (int32 I = 0; I < Cells.Num(); ++I)
+	{
+		Cells[I].Distance = Field[I];
+		if (Field[I] != INDEX_NONE)
+		{
+			++Reached;
+			MaxDistance = FMath::Max(MaxDistance, Field[I]);
+		}
+	}
+	return Reached;
 }
 
 int32 FVRTMazeData::CountFlag(EVRTMazeCellFlag::Type Flag) const

@@ -16,6 +16,7 @@ AVRTTriggerBase::AVRTTriggerBase()
 	Trigger->InitSphereRadius(TriggerRadius);
 	Trigger->SetCollisionProfileName(VRTCollision::TriggerProfile);
 	Trigger->SetGenerateOverlapEvents(true);
+	Trigger->SetCanEverAffectNavigation(false);
 	SetRootComponent(Trigger);
 }
 

@@ -96,6 +96,12 @@ struct VRT_API FVRTMazeData
 	/** Breadth-first walking distance from Start into Cells[].Distance and MaxDistance. Returns cells reached. */
 	int32 ComputeDistances(const FIntPoint& Start);
 
+	/**
+	 * Breadth-first walking distance from Start for every cell into OutDistances (row-major, INDEX_NONE if
+	 * unreachable), without touching Cells[].Distance. Used for key spacing and later by the AI director.
+	 */
+	void ComputeDistanceField(const FIntPoint& Start, TArray<int32>& OutDistances) const;
+
 	/** Cells whose Flags contain Flag. */
 	int32 CountFlag(EVRTMazeCellFlag::Type Flag) const;
 

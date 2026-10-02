@@ -3,10 +3,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Level/VRTMazeData.h"
+#include "TimerManager.h"
 #include "Level/VRTMazeGenerator.h"
 #include "VRTMazeBuilder.generated.h"
 
+class ANavigationData;
 class APlayerStart;
+class AVRTKey;
+class AVRTLevelExit;
 class UHierarchicalInstancedStaticMeshComponent;
 class UMaterialInterface;
 class UStaticMeshComponent;
@@ -28,8 +32,12 @@ class VRT_API AVRTMazeBuilder : public AActor
 public:
 	AVRTMazeBuilder();
 
-	/** Generates a maze from the Maze* properties below, then builds it. */
-	void GenerateAndBuild();
+	/**
+	 * Generates the maze for a level (1-based) and builds it. Level 1 uses Seed; every further level adds one to the
+	 * seed. With bUseLevelProgression the size, rooms, braiding and bias follow VRTLevelProgression::ForLevel,
+	 * otherwise the Maze* properties below are used for every level.
+	 */
+	void GenerateAndBuild(int32 LevelIndex = 1);
 
 	/** Builds geometry for an existing maze (replaces what was built before). */
 	void BuildMaze(const FVRTMazeData& InMaze);
@@ -37,15 +45,37 @@ public:
 	/** Removes all generated geometry and the spawned PlayerStart. */
 	void ClearMaze();
 
+	/**
+	 * Checks that the navigation mesh connects the spawn to every key. Runs by itself after each rebuild; call it
+	 * to repeat the check. Results go to LogVRTNav.
+	 */
+	void ValidateNavigation();
+
+	/** Logs whether the navigation mesh is still building and how big its area is. */
+	void LogNavigationStatus() const;
+
+	/** True once the navigation mesh finished building after the last maze build and the path check ran. */
+	bool IsNavigationReady() const { return bNavReady; }
+
 	/** Moves a pawn to the spawn cell, standing on the floor. */
 	void PlacePawnAtSpawn(APawn* Pawn) const;
 
 	const FVRTMazeData& GetMaze() const { return Maze; }
 
+	/** The PlayerStart in the spawn cell, or null before the first build. */
+	APlayerStart* GetSpawnPoint() const { return SpawnPoint; }
+
+	/** Increases by one every time BuildMaze runs. The dev map uses it to notice a rebuilt maze. */
+	int32 GetBuildCounter() const { return BuildCounter; }
+
 	/** Cell centre in world space at floor level, cm. */
 	FVector GetCellCenterWorld(const FIntPoint& Cell) const;
 
 	// --- Maze parameters (see FVRTMazeParams) ---
+
+	/** The maze grows with the level (see VRTLevelProgression.h) and ignores MazeWidth/Height, rooms, braiding and bias. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VRT|Maze")
+	bool bUseLevelProgression = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze", meta = (ClampMin = "2", ClampMax = "64"))
 	int32 MazeWidth = 8;
@@ -53,6 +83,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze", meta = (ClampMin = "2", ClampMax = "64"))
 	int32 MazeHeight = 8;
 
+	/** Seed of level 1. Level N uses Seed + N - 1. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VRT|Maze")
 	int32 Seed = 1;
 
@@ -71,6 +102,46 @@ public:
 	/** Spawn hub size in cells (1 = no hub). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze", meta = (ClampMin = "1", ClampMax = "4"))
 	int32 SpawnHubSize = 2;
+
+	/** Keys to place (0-4), one per quadrant. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay", meta = (ClampMin = "0", ClampMax = "4"))
+	int32 KeyCount = 4;
+
+	/** A key is picked among this share (0-1) of its quadrant's cells that lie farthest from the spawn. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	float KeyTopFraction = 0.25f;
+
+	/** Minimum walking distance in cells between two keys. 0 = automatic. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay", meta = (ClampMin = "0"))
+	int32 MinKeyDistance = 0;
+
+	/** Keys the exit needs. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay", meta = (ClampMin = "0"))
+	int32 ExitRequiredKeys = 2;
+
+	/** Key height above the floor, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay")
+	float KeyHeight = 100.f;
+
+	/** How far the beacon stands from the cell's walls (measured to its edge), cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay", meta = (ClampMin = "0.0"))
+	float BeaconCornerInset = 35.f;
+
+	/** Place the keys (with beacons) and the exit. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Gameplay")
+	bool bPlaceGameplay = true;
+
+	/** Resize the level's NavMeshBoundsVolume to the maze after every build, so the navigation mesh follows it. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Navigation")
+	bool bUpdateNavigation = true;
+
+	/** Navigation area around the maze edge, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Navigation", meta = (ClampMin = "0.0"))
+	float NavBoundsMargin = 400.f;
+
+	/** Height of the navigation area, cm (from just below the floor upwards). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze|Navigation", meta = (ClampMin = "100.0"))
+	float NavBoundsHeight = 600.f;
 
 	/** Generate and build automatically when the game starts. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Maze")
@@ -112,6 +183,13 @@ private:
 
 	void AddBox(UHierarchicalInstancedStaticMeshComponent* Chunk, const FVector& Center, const FVector& Size) const;
 	void BuildFloor();
+	FVRTMazeParams MakeParams(int32 LevelIndex) const;
+	void PlaceGameplayActors();
+
+	/** Fits the NavMeshBoundsVolume to the maze and tells the navigation system. */
+	void UpdateNavigation();
+	UFUNCTION()
+	void HandleNavigationFinished(ANavigationData* NavData);
 	void PlaceSpawnPoint();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VRT|Maze", meta = (AllowPrivateAccess = "true"))
@@ -126,5 +204,17 @@ private:
 	UPROPERTY(Transient)
 	APlayerStart* SpawnPoint = nullptr;
 
+	/** Keys and the exit spawned by PlaceGameplayActors. */
+	UPROPERTY(Transient)
+	TArray<AActor*> GameplayActors;
+
 	FVRTMazeData Maze;
+	int32 BuildCounter = 0;
+
+	// Navigation bookkeeping.
+	bool bNavDelegateBound = false;
+	FTimerHandle NavValidateTimer;
+	double NavBuildStartTime = 0.0;
+	bool bNavReady = false;
+	bool bWarnedNoNavVolume = false;
 };

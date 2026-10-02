@@ -18,6 +18,7 @@ UVRTHandComponent::UVRTHandComponent()
 
 	SetCollisionProfileName(VRTCollision::HandProfile);
 	SetGenerateOverlapEvents(true);
+	SetCanEverAffectNavigation(false); // hands move every frame and must not dirty the navigation mesh
 	SetHiddenInGame(true);
 	InitSphereRadius(GrabRadius);
 }

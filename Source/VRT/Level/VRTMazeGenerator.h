@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Level/VRTMazeData.h"
+#include "Math/RandomStream.h"
 
 /** Everything that decides what a generated maze looks like. Same params and seed give the same maze. */
 struct FVRTMazeParams
@@ -28,6 +29,15 @@ struct FVRTMazeParams
 	FIntPoint RoomMinSize = FIntPoint(2, 2);
 	FIntPoint RoomMaxSize = FIntPoint(4, 4);
 
+	/** Keys to place (0-4): one per quadrant, from the far end of the quadrant. */
+	int32 KeyCount = 4;
+
+	/** A key is picked among the farthest (from the spawn) share of its quadrant's cells (0-1). */
+	float KeyTopFraction = 0.25f;
+
+	/** Minimum walking distance in cells between two keys. 0 = automatic ((Width + Height) / 4, at least 4). */
+	int32 MinKeyDistance = 0;
+
 	/** The spawn hub is a SpawnHubSize x SpawnHubSize open area in the bottom-left corner. 1 means no hub. */
 	int32 SpawnHubSize = 2;
 };
@@ -38,6 +48,7 @@ struct FVRTMazeStats
 	int32 DeadEndsBeforeBraid = 0;
 	int32 DeadEndsAfterBraid = 0;
 	int32 RoomsCarved = 0;
+	int32 KeysPlaced = 0;
 	int32 CellsReachable = 0;
 	double GenerationMs = 0.0;
 };
@@ -55,6 +66,9 @@ public:
 	static FVRTMazeData Generate(const FVRTMazeParams& Params, FVRTMazeStats* OutStats = nullptr);
 
 private:
+	/** Flags up to Params.KeyCount cells as keys (see plan 10.3). Needs Distance filled in. Returns how many were placed. */
+	static int32 PlaceKeys(FVRTMazeData& Maze, const FVRTMazeParams& Params, FRandomStream& Random);
+
 	/** Opens all walls inside the rectangle, tags its cells as a room and appends them to Rooms. */
 	static void CarveRoom(FVRTMazeData& Maze, const FIntPoint& Min, const FIntPoint& Size, int32 RoomIndex, TArray<TArray<FIntPoint>>& Rooms);
 };

@@ -21,6 +21,12 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+	/** Emissive colour. Can be set before or after the beacon begins play. */
+	void SetColor(const FLinearColor& InColor);
+
+	/** Shows the full-size column (true) or hides it (false). Also cancels a fade out. */
+	void SetActive(bool bActive);
+
 	/** Narrows the column to nothing over DurationSec, then hides the beacon. */
 	void FadeOut(float DurationSec = 1.f);
 

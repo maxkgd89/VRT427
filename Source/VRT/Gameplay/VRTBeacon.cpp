@@ -65,6 +65,23 @@ void AVRTBeacon::BeginPlay()
 	}
 }
 
+void AVRTBeacon::SetColor(const FLinearColor& InColor)
+{
+	Color = InColor;
+	if (Material)
+	{
+		Material->SetVectorParameterValue(TEXT("Color"), Color);
+	}
+}
+
+void AVRTBeacon::SetActive(bool bActive)
+{
+	bFadingOut = false;
+	SetActorTickEnabled(false);
+	ApplyShape(1.f);
+	SetActorHiddenInGame(!bActive);
+}
+
 void AVRTBeacon::FadeOut(float DurationSec)
 {
 	if (bFadingOut)
