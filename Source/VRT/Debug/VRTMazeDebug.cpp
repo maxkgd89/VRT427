@@ -2,6 +2,7 @@
 //
 //   VRT.Maze.Generate [Width Height Seed BraidFraction RoomCount NewestBias DrawScale]
 //   VRT.Maze.Clear
+//   VRT.Maze.Build [Width Height Seed BraidFraction RoomCount NewestBias]   (rebuilds the AVRTMazeBuilder in the level and moves you to its spawn)
 //   VRT.Maze.SelfTest      (generator checks over many sizes and seeds; no world or headset needed)
 //
 // The maze is drawn as a miniature with debug lines in front of the player and printed as text to LogVRTMaze.
@@ -12,6 +13,8 @@
 #include "GameFramework/Pawn.h"
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "Level/VRTMazeBuilder.h"
 #include "Level/VRTMazeData.h"
 #include "Level/VRTMazeGenerator.h"
 #include "VRTLog.h"
@@ -226,6 +229,41 @@ namespace
 		TEXT("VRT.Maze.Generate"),
 		TEXT("Generates a maze and draws a miniature. Args: [Width Height Seed BraidFraction RoomCount NewestBias DrawScale]"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&GenerateCommand));
+
+	void BuildCommand(const TArray<FString>& Args, UWorld* World)
+	{
+		if (!World)
+		{
+			return;
+		}
+
+		AVRTMazeBuilder* Builder = nullptr;
+		for (TActorIterator<AVRTMazeBuilder> It(World); It; ++It)
+		{
+			Builder = *It;
+			break;
+		}
+		if (!Builder)
+		{
+			VRT_LOG(LogVRTMaze, Warning, "No AVRTMazeBuilder in this level (open the maze map, see Tools/Editor/create_maze_level.py)");
+			return;
+		}
+
+		if (Args.IsValidIndex(0)) { Builder->MazeWidth = FMath::Clamp(FCString::Atoi(*Args[0]), 2, 64); }
+		if (Args.IsValidIndex(1)) { Builder->MazeHeight = FMath::Clamp(FCString::Atoi(*Args[1]), 2, 64); }
+		if (Args.IsValidIndex(2)) { Builder->Seed = FCString::Atoi(*Args[2]); }
+		if (Args.IsValidIndex(3)) { Builder->BraidFraction = FMath::Clamp(FCString::Atof(*Args[3]), 0.f, 1.f); }
+		if (Args.IsValidIndex(4)) { Builder->RoomCount = FMath::Max(0, FCString::Atoi(*Args[4])); }
+		if (Args.IsValidIndex(5)) { Builder->NewestBias = FMath::Clamp(FCString::Atof(*Args[5]), 0.f, 1.f); }
+
+		Builder->GenerateAndBuild();
+		Builder->PlacePawnAtSpawn(UGameplayStatics::GetPlayerPawn(World, 0));
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs GMazeBuild(
+		TEXT("VRT.Maze.Build"),
+		TEXT("Rebuilds the maze geometry of the AVRTMazeBuilder in the level. Args: [Width Height Seed BraidFraction RoomCount NewestBias]"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&BuildCommand));
 
 	FAutoConsoleCommandWithWorldAndArgs GMazeClear(
 		TEXT("VRT.Maze.Clear"),

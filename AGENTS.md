@@ -32,7 +32,7 @@ Content/VRTemplate/         UE VR Template — reference only
 ## Hard rules
 - **Do not use the VR Template's gameplay**: `VRPawn`, `GrabComponent`, `VRInteractionBPI`, `Pistol`, `Projectile`, `Menu`, `VRGameMode` BPs. Read them for ideas only; all our gameplay is C++.
 - **Never edit binary assets** (`.uasset`, `.umap`) as files. When something must be done in the editor, give the user short, numbered editor steps.
-- **Test level naming:** `Tools/Editor/create_test_level.py` generates the test map. Each time the script changes, bump `MAP_NAME` to the next number (`L_Test2`, `L_Test3`, ...) and keep older maps; tell the user to point the default maps (`Config/DefaultEngine.ini`) at the new one after it exists.
+- **Test level naming:** `Tools/Editor/create_test_level.py` generates the hand-made test map and `Tools/Editor/create_maze_level.py` the procedural maze map (`L_Maze1`, ...). Each time the script changes, bump `MAP_NAME` to the next number (`L_Test2`, `L_Test3`, ...) and keep older maps; tell the user to point the default maps (`Config/DefaultEngine.ini`) at the new one after it exists.
 - Never touch `Binaries/`, `Intermediate/`, `DerivedDataCache/`. Read `Saved/Logs/` freely; don't edit `Saved/`.
 - Weapons never simulate physics. Released weapons hide and respawn in their holster; they are never destroyed.
 - Movement is horizontal only (no jumping). The pawn has gravity only so the capsule settles back to the floor after stepping over low obstacles. Walls block the pawn's capsule.
@@ -55,7 +55,7 @@ Content/VRTemplate/         UE VR Template — reference only
 - Name the space of every vector in code and logs: **World**, **PawnLocal** (relative to the VROrigin) or **Local** (component).
 - Prefer events and delegates over Tick. When Tick is needed, keep it cheap (Quest budget).
 - Debug console variables live under `VRT.Debug.*` (e.g. `VRT.Debug.Triggers`, `VRT.Debug.Holsters`, `VRT.Debug.Grab`, `VRT.Debug.TwoHand`). Debug drawing only happens when its cvar is on.
-- Maze debugging (step 10): console commands `VRT.Maze.Generate [W H Seed Braid Rooms NewestBias Scale]` (draws a miniature and prints the maze as text to `LogVRTMaze`), `VRT.Maze.Clear`, `VRT.Maze.SelfTest` (checks many generated mazes; works headless).
+- Maze debugging (step 10): console commands `VRT.Maze.Generate [W H Seed Braid Rooms NewestBias Scale]` (draws a miniature and prints the maze as text to `LogVRTMaze`), `VRT.Maze.Clear`, `VRT.Maze.Build [W H Seed Braid Rooms NewestBias]` (rebuilds the maze geometry in the maze map), `VRT.Maze.SelfTest` (checks many generated mazes; works headless).
 - Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left Y button), `RecenterHMD` (left X button). Never bind `EKeys::OculusTouch_*` directly in new code.
 
 ## Logging
