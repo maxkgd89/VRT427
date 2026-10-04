@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Player/VRTPlayerPawnBase.h"
+#include "TimerManager.h"
 #include "VRFPawn.generated.h"
 
 class UCameraComponent;
@@ -14,6 +15,10 @@ class UStaticMeshComponent;
  * A cylinder body (the capsule's visual) with a small "nose" box showing which way it faces, seen from a spring-arm
  * camera looking straight down. WASD moves relative to the camera yaw (W = up on screen), the wheel zooms.
  * Movement is horizontal only and has no gravity; walls block the capsule, exactly like the VR pawn.
+ *
+ * Aim and fire (11.5.3): the pawn faces the mouse cursor, projected onto a horizontal plane at muzzle height. Holding the
+ * left mouse button fires like the VR gun: it reads the defaults of the rifle (interval, full-auto, projectile, damage),
+ * so retuning the rifle retunes VRF. Shots go through VRTShot::Fire. Ammo is unlimited.
  */
 UCLASS()
 class VRT_API AVRFPawn : public AVRTPlayerPawnBase
@@ -42,6 +47,17 @@ protected:
 	/** VRF_Run is held (Shift), not toggled: pressed → run speed, released → walk speed. */
 	void OnRunPressed();
 	void OnRunReleased();
+
+	/** Aim and fire (VRF_Fire, left mouse button). */
+	void OnFirePressed();
+	void OnFireReleased();
+	void OnFireTimer();
+
+	/** Fires one shot if the fire interval of the rifle allows it. Returns true if a shot was fired. */
+	bool TryFire();
+
+	/** Projects the mouse cursor onto the muzzle-height plane, turns the pawn toward it and updates AimPointWorld. */
+	void UpdateAim();
 
 	/** Scroll wheel: one notch multiplies the target arm length by ZoomStep. */
 	void OnZoom(float Value);
@@ -101,6 +117,30 @@ protected:
 	/** Eye height above the floor for GetPawnViewLocation(), cm (same value as the VR pawn's SeatedEyeHeight). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRF|Camera", meta = (ClampMin = "50.0"))
 	float EyeHeight = 150.f;
+
+	/** Height of the muzzle above the floor, cm. The cursor is projected onto the horizontal plane at this height. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRF|Weapon", meta = (ClampMin = "10.0"))
+	float MuzzleHeight = 120.f;
+
+	/** How far in front of the capsule centre the bullet starts, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRF|Weapon", meta = (ClampMin = "0.0"))
+	float MuzzleForwardOffset = 45.f;
+
+	/** The cursor must be at least this far from the pawn (cm, on the plane) for the pawn to turn; avoids spinning when the cursor is on top of it. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRF|Weapon", meta = (ClampMin = "0.0"))
+	float MinAimDistance = 30.f;
+
+	/** Where the cursor hits the muzzle-height plane (World). Valid when bHasAimPoint. */
+	FVector AimPointWorld = FVector::ZeroVector;
+	bool bHasAimPoint = false;
+
+	/** Muzzle location and direction of the next shot (World), refreshed by UpdateAim. */
+	FVector MuzzleLocationWorld = FVector::ZeroVector;
+	FVector MuzzleDirectionWorld = FVector::ForwardVector;
+
+	bool bFireHeld = false;
+	double LastFireTime = -1000.0;
+	FTimerHandle FireTimer;
 
 	/** Arm length the zoom is easing toward, cm. */
 	float DesiredArmLength = 2000.f;

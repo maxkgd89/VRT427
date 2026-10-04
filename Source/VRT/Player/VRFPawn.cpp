@@ -3,10 +3,15 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Debug/VRTDebugSettings.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Weapons/VRTRifle.h"
+#include "Weapons/VRTShot.h"
 #include "VRTLog.h"
 
 AVRFPawn::AVRFPawn()
@@ -89,6 +94,8 @@ void AVRFPawn::NotifyTeleported()
 
 	// New level or restart: drop any speed the pawn carried over and start in walk mode.
 	Movement->StopMovementImmediately();
+	bFireHeld = false;
+	GetWorldTimerManager().ClearTimer(FireTimer);
 	bRunning = false;
 	Movement->MaxSpeed = WalkSpeed;
 	VRT_LOG(LogVRTFlat, Verbose, "VRF pawn teleported to(World)=%s", *GetActorLocation().ToCompactString());
@@ -108,10 +115,12 @@ void AVRFPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("VRF_MoveForward"), this, &AVRFPawn::OnMoveForward);
 	PlayerInputComponent->BindAxis(TEXT("VRF_MoveRight"), this, &AVRFPawn::OnMoveRight);
 	PlayerInputComponent->BindAxis(TEXT("VRF_Zoom"), this, &AVRFPawn::OnZoom);
+	PlayerInputComponent->BindAction(TEXT("VRF_Fire"), IE_Pressed, this, &AVRFPawn::OnFirePressed);
+	PlayerInputComponent->BindAction(TEXT("VRF_Fire"), IE_Released, this, &AVRFPawn::OnFireReleased);
 	PlayerInputComponent->BindAction(TEXT("VRF_Run"), IE_Pressed, this, &AVRFPawn::OnRunPressed);
 	PlayerInputComponent->BindAction(TEXT("VRF_Run"), IE_Released, this, &AVRFPawn::OnRunReleased);
 
-	VRT_LOG(LogVRTFlat, Log, "VRF input bound: VRF_MoveForward, VRF_MoveRight, VRF_Zoom, VRF_Run");
+	VRT_LOG(LogVRTFlat, Log, "VRF input bound: VRF_MoveForward, VRF_MoveRight, VRF_Zoom, VRF_Fire, VRF_Run");
 }
 
 FVector AVRFPawn::GetViewForwardFlat() const
@@ -159,6 +168,110 @@ void AVRFPawn::OnRunReleased()
 	VRT_LOG(LogVRTFlat, Log, "Mode Run -> Walk (VRF_Run released)");
 }
 
+void AVRFPawn::UpdateAim()
+{
+	const APlayerController* PC = Cast<APlayerController>(GetController());
+	FVector CursorOrigin, CursorDirection;
+	if (!PC || !PC->DeprojectMousePositionToWorld(CursorOrigin, CursorDirection))
+	{
+		bHasAimPoint = false; // cursor outside the viewport
+		return;
+	}
+
+	// Ray from the camera through the cursor, cut with the horizontal plane at muzzle height.
+	const float PlaneZ = GetActorLocation().Z - CapsuleHalfHeight + MuzzleHeight;
+	if (FMath::IsNearlyZero(CursorDirection.Z))
+	{
+		bHasAimPoint = false; // ray parallel to the plane
+		return;
+	}
+	const float T = (PlaneZ - CursorOrigin.Z) / CursorDirection.Z;
+	if (T < 0.f)
+	{
+		bHasAimPoint = false; // plane is behind the camera
+		return;
+	}
+	AimPointWorld = CursorOrigin + CursorDirection * T;
+	bHasAimPoint = true;
+
+	const FVector Center(GetActorLocation().X, GetActorLocation().Y, PlaneZ);
+	FVector ToAim = AimPointWorld - Center;
+	ToAim.Z = 0.f;
+	if (ToAim.Size() >= MinAimDistance)
+	{
+		MuzzleDirectionWorld = ToAim.GetSafeNormal();
+		SetActorRotation(FRotator(0.f, MuzzleDirectionWorld.Rotation().Yaw, 0.f));
+	}
+	MuzzleLocationWorld = Center + MuzzleDirectionWorld * MuzzleForwardOffset;
+
+	VRT_LOG_THROTTLED(LogVRTFlat, VeryVerbose, 0.25, "Aim point(World)=%s dir(World)=%s muzzle(World)=%s", *AimPointWorld.ToCompactString(),
+		*MuzzleDirectionWorld.ToCompactString(), *MuzzleLocationWorld.ToCompactString());
+
+	if (VRTDebug::ShowAimLines())
+	{
+		DrawDebugLine(GetWorld(), MuzzleLocationWorld, AimPointWorld, FColor::Yellow, false, -1.f, 0, 1.5f);
+		DrawDebugSphere(GetWorld(), AimPointWorld, 12.f, 8, FColor::Yellow, false, -1.f, 0, 1.f);
+	}
+}
+
+void AVRFPawn::OnFirePressed()
+{
+	if (bDead)
+	{
+		return;
+	}
+
+	const AVRTRifle* Rifle = GetDefault<AVRTRifle>();
+	bFireHeld = true;
+	VRT_LOG(LogVRTFlat, Log, "Fire Idle -> Firing (VRF_Fire pressed, interval %.2f s, automatic=%d)", Rifle->GetFireInterval(), Rifle->IsAutomatic() ? 1 : 0);
+	TryFire();
+	if (Rifle->IsAutomatic())
+	{
+		GetWorldTimerManager().SetTimer(FireTimer, this, &AVRFPawn::OnFireTimer, FMath::Max(Rifle->GetFireInterval(), 0.01f), true);
+	}
+}
+
+void AVRFPawn::OnFireReleased()
+{
+	if (bFireHeld)
+	{
+		VRT_LOG(LogVRTFlat, Log, "Fire Firing -> Idle (VRF_Fire released)");
+	}
+	bFireHeld = false;
+	GetWorldTimerManager().ClearTimer(FireTimer);
+}
+
+void AVRFPawn::OnFireTimer()
+{
+	if (!bFireHeld || bDead)
+	{
+		GetWorldTimerManager().ClearTimer(FireTimer);
+		return;
+	}
+	TryFire();
+}
+
+bool AVRFPawn::TryFire()
+{
+	const AVRTRifle* Rifle = GetDefault<AVRTRifle>();
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastFireTime < Rifle->GetFireInterval() - 0.005)
+	{
+		return false; // still cooling down
+	}
+
+	UpdateAim();
+	if (!bHasAimPoint)
+	{
+		return false; // cursor outside the view: nothing to aim at
+	}
+
+	LastFireTime = Now;
+	const FTransform Muzzle(MuzzleDirectionWorld.Rotation(), MuzzleLocationWorld);
+	VRTShot::Fire(GetWorld(), Rifle->GetProjectileClass(), Muzzle, this, this, Rifle->GetProjectileDamage());
+	return true;
+}
+
 void AVRFPawn::OnZoom(float Value)
 {
 	if (FMath::IsNearlyZero(Value))
@@ -181,4 +294,8 @@ void AVRFPawn::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	UpdateZoom(DeltaSeconds);
+	if (!bDead)
+	{
+		UpdateAim();
+	}
 }

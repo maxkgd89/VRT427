@@ -418,7 +418,7 @@ Rules for the whole step:
 - [x] Step 11 — Health and damage
 - [ ] Step 11.5 — VRF flat playtest mode
   - [x] 11.5.1 Shared player base (`AVRTPlayerPawnBase`, `VRTShot`)
-  - [ ] 11.5.2 VRF pawn, controller, game mode: movement and camera
+  - [x] 11.5.2 VRF pawn, controller, game mode: movement and camera
   - [ ] 11.5.3 Aim and fire
   - [ ] 11.5.4 Free camera and HUD
 - [ ] Step 12 — Ammo and reload

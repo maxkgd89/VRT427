@@ -1,27 +1,352 @@
 [
 	{
-		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\MyClass.cpp",
-		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\AI\\\\.gitkeep",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
 		"directory": "E:\\UE_4.27\\Engine\\Source"
 	},
 	{
-		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\MyClass.h",
-		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Combat\\\\.gitkeep",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Combat\\\\VRTHealthComponent.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Combat\\\\VRTHealthComponent.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Combat\\\\VRTTargetDummy.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Combat\\\\VRTTargetDummy.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTCombatDebug.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTDebugGrabTarget.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTDebugGrabTarget.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTDebugSettings.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTDebugSettings.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTMazeDebug.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTMazeMapDraw.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Debug\\\\VRTMazeMapDraw.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRFGameMode.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRFGameMode.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTBeacon.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTBeacon.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTGameMode.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTGameMode.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTGameState.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTGameState.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTKey.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTKey.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTLevelExit.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTLevelExit.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTTriggerBase.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Gameplay\\\\VRTTriggerBase.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\.gitkeep",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTLevelProgression.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTMazeBuilder.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTMazeBuilder.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTMazeData.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTMazeData.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTMazeGenerator.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Level\\\\VRTMazeGenerator.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRFPawn.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRFPawn.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRFPlayerController.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRFPlayerController.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTGrabPointComponent.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTGrabPointComponent.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTHandComponent.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTHandComponent.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTHolsterComponent.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTHolsterComponent.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTPawn.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTPawn.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTPlayerPawnBase.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Player\\\\VRTPlayerPawnBase.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\UI\\\\.gitkeep",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\UI\\\\VRFHUD.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\UI\\\\VRFHUD.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
 		"directory": "E:\\UE_4.27\\Engine\\Source"
 	},
 	{
 		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRT.Build.cs",
-		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
 		"directory": "E:\\UE_4.27\\Engine\\Source"
 	},
 	{
 		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRT.cpp",
-		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
 		"directory": "E:\\UE_4.27\\Engine\\Source"
 	},
 	{
 		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRT.h",
-		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.205.rsp\"",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRTCollision.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRTLog.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\VRTLog.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\.gitkeep",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTPistol.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTPistol.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTProjectile.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTProjectile.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTRifle.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTRifle.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTShot.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTShot.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTWeaponBase.cpp",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
+		"directory": "E:\\UE_4.27\\Engine\\Source"
+	},
+	{
+		"file": "E:\\\\UE_projects\\\\VRT\\\\Source\\\\VRT\\\\Weapons\\\\VRTWeaponBase.h",
+		"command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64\\cl.exe @\"E:\\UE_projects\\VRT\\.vscode\\compileCommands_Default\\VRT.211.rsp\"",
 		"directory": "E:\\UE_4.27\\Engine\\Source"
 	}
 ]
