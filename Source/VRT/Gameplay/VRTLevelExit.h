@@ -27,8 +27,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void OnPlayerEntered(AVRTPawn* Pawn) override;
-	virtual void OnPlayerExited(AVRTPawn* Pawn) override;
+	virtual void OnPlayerEntered(AVRTPlayerPawnBase* Pawn) override;
+	virtual void OnPlayerExited(AVRTPlayerPawnBase* Pawn) override;
 
 	UFUNCTION()
 	void RefreshVisual();

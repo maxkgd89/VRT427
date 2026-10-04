@@ -29,7 +29,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaSeconds) override;
-	virtual void OnPlayerEntered(AVRTPawn* Pawn) override;
+	virtual void OnPlayerEntered(AVRTPlayerPawnBase* Pawn) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VRT|Key")
 	UStaticMeshComponent* Mesh;

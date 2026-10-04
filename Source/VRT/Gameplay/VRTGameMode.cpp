@@ -152,7 +152,7 @@ void AVRTGameMode::LoadPendingLevel()
 	LevelIndex = PendingLevel;
 	VRT_LOG(LogVRTGameFlow, Log, "Building level %d in place", LevelIndex);
 	Builder->GenerateAndBuild(LevelIndex);
-	if (AVRTPawn* Pawn = Cast<AVRTPawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
+	if (AVRTPlayerPawnBase* Pawn = Cast<AVRTPlayerPawnBase>(UGameplayStatics::GetPlayerPawn(this, 0)))
 	{
 		Builder->PlacePawnAtSpawn(Pawn);
 		Pawn->NotifyTeleported();

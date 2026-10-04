@@ -6,6 +6,8 @@ Global decisions (apply to every enemy):
 - Logic in C++ only (pure C++ state machine in the AI controller). No Behavior Trees, no Blueprints where C++ can do it.
 - No animation. Enemies are solid static meshes; feedback is done in code (material flash, scale, bob, lean).
 - The labyrinth has 2 m walls: walls block sight in both directions. Every "sees the player" check is a line-of-sight test, not just distance.
+- The player is found as `AVRTPlayerPawnBase` (VR pawn or the flat VRF test pawn, plan step 11.5). Sight traces go to the player's eye, `GetPawnViewLocation()`: HMD in VR, floor + 150 cm in VRF. Never to a camera, never via `AVRTPawn`.
+- Gunshots come from `VRTShot::Fire`, which both pawns use, so hearing and sleeping-sphere logic behaves the same in VR and VRF.
 
 Status legend: **[decided]** = agreed · **[proposed]** = suggestion, not confirmed · **[open]** = needs a decision
 
@@ -83,7 +85,7 @@ Every enemy can be spawned in one of two modes.
 |---|---|---|
 | Sight range | 15 m (≈ 4 maze cells) | [proposed] |
 | Sight cone (FOV) | 120° | [proposed] |
-| Sight check | line trace from enemy "eye" to player HMD position, blocked by WorldStatic (walls) | [proposed] |
+| Sight check | line trace from enemy "eye" to the player's eye (`GetPawnViewLocation()`: HMD in VR, floor + 150 cm in VRF), blocked by WorldStatic (walls) | [proposed] |
 | Sight check rate | every 0.2 s (not every tick) | [proposed] |
 | Lose-sight grace time | 0.5 s before switching to GoToLastKnown (avoids flicker at corners) | [proposed] |
 | Wander speed | 1.0 m/s | [proposed] |

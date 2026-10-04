@@ -9,6 +9,7 @@
 #include "VRTCollision.h"
 #include "VRTLog.h"
 #include "Weapons/VRTProjectile.h"
+#include "Weapons/VRTShot.h"
 
 AVRTWeaponBase::AVRTWeaponBase()
 {
@@ -125,17 +126,7 @@ void AVRTWeaponBase::Fire()
 	VRT_LOG(LogVRTWeapon, Log, "%s: fire, muzzle(World)=%s dir(World)=%s", *GetName(),
 		*MuzzleTransform.GetLocation().ToCompactString(), *MuzzleTransform.GetRotation().GetForwardVector().ToCompactString());
 
-	if (ProjectileClass)
-	{
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-		Params.Instigator = GetInstigator();
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (AVRTProjectile* Projectile = GetWorld()->SpawnActor<AVRTProjectile>(ProjectileClass, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator(), Params))
-		{
-			Projectile->SetDamage(ProjectileDamage);
-		}
-	}
+	VRTShot::Fire(GetWorld(), ProjectileClass, MuzzleTransform, this, GetInstigator(), ProjectileDamage);
 
 	if (FireSound)
 	{

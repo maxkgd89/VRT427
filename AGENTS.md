@@ -4,6 +4,7 @@ Instructions for any coding agent working in this repository (Claude Code reads 
 
 ## Project at a glance
 - VR shooter in a labyrinth: find keys guided by blue beacons, return to spawn with ≥ 2 of 4 keys, go to the next level. A pistol (one hand) and a gun (two hands) are drawn from body holsters.
+- **Two player pawns** share `AVRTPlayerPawnBase`: `AVRTPawn` (VR, the real game) and `AVRFPawn` (flat top-down test mode for AI and level work, `AVRFGameMode`, plan step 11.5). VRF is selected per map in World Settings → GameMode Override.
 - **The full plan and the current progress live in `Docs/plan.md`. Read it before starting any task**, and work on one step at a time.
 - Unreal Engine **4.27**, **C++ first**, OpenXR. Target: PC VR (Rift S, Quest 3 via Link) first, Quest standalone later.
 - Paths:
@@ -20,9 +21,9 @@ Docs/performance.md         performance baseline and Quest checklist (step 9)
 Config/                     Default*.ini (input, collision, rendering, maps)
 Source/VRT/
   VRTLog.h/.cpp             log categories (see Logging)
-  Player/                   VRTPawn, hands, holsters
-  Weapons/                  weapon base, pistol, rifle, projectile
-  Gameplay/                 game mode/state, triggers, keys, beacons, exit
+  Player/                   VRTPlayerPawnBase, VRTPawn, hands, holsters, VRFPawn, VRFPlayerController
+  Weapons/                  weapon base, pistol, rifle, projectile, VRTShot (shared fire helper)
+  Gameplay/                 game modes (VRTGameMode, VRFGameMode), game state, triggers, keys, beacons, exit
   Level/                    maze data, generator, builder (step 10)
   AI/  Combat/  UI/  Debug/ later steps
 Content/VRT/                our assets (maps, materials, meshes)
@@ -36,6 +37,8 @@ Content/VRTemplate/         UE VR Template — reference only
 - Never touch `Binaries/`, `Intermediate/`, `DerivedDataCache/`. Read `Saved/Logs/` freely; don't edit `Saved/`.
 - Weapons never simulate physics. Released weapons hide and respawn in their holster; they are never destroyed.
 - Movement is horizontal only (no jumping). The pawn has gravity only so the capsule settles back to the floor after stepping over low obstacles. Walls block the pawn's capsule.
+- **Player-type rule:** gameplay, AI and level code outside `Player/` never casts to `AVRTPawn`. Use `AVRTPlayerPawnBase` and its virtuals (`PlayHapticPulseBothHands`, `NotifyTeleported`, `GetPawnViewLocation`). Enemies trace sight to `GetPawnViewLocation()`, never to a camera (the VRF camera is far above the maze).
+- **All shots go through `VRTShot::Fire`** (VR weapons and the VRF pawn), so damage, logging and later gunshot noise stay identical in both modes.
 - Do not commit or push unless the user asks. Propose a commit message at the end of each step.
 
 ## Building
@@ -58,6 +61,7 @@ Content/VRTemplate/         UE VR Template — reference only
 - Maze debugging (step 10): console commands `VRT.Maze.Generate [W H Seed Braid Rooms NewestBias Scale]` (draws a miniature and prints the maze as text to `LogVRTMaze`), `VRT.Maze.Clear`, `VRT.Maze.Build [W H Seed Braid Rooms NewestBias]` (rebuilds the maze geometry in the maze map), `VRT.Maze.Level N` (fade and go to level N: maze size, seed and rooms follow the level), `VRT.Nav.Status` / `VRT.Nav.Test` (navigation mesh state and a spawn-to-keys path check), `VRT.Maze.SelfTest` (checks many generated mazes; works headless).
 - Combat debugging (step 11): `VRT.Player.Damage [amount]`, `VRT.Player.Heal [amount]`, `VRT.Player.Health`, `VRT.Dummy.Spawn [health]` (shooting target with a health readout, 3 m in front of the player). Output in `LogVRTCombat`.
 - Input uses **named mappings** from `Config/DefaultInput.ini`: `GrabLeft`, `GrabRight`, `FireRight` (right index trigger), `MoveX`, `MoveY`, `Turn`, `ToggleRun` (left Y button), `RecenterHMD` (left X button), `ToggleMap` (left Menu button: dev map of the current maze). Never bind `EKeys::OculusTouch_*` directly in new code.
+- VRF (flat mode) input uses its own names with the `VRF_` prefix: axes `VRF_MoveForward`, `VRF_MoveRight`, `VRF_Zoom`, `VRF_MouseX`, `VRF_MouseY`; actions `VRF_Fire`, `VRF_Run`, `VRF_FreeCamera`, `VRF_PanDrag`. Don't add keyboard/mouse keys to the VR mapping names.
 
 ## Logging
 
@@ -80,6 +84,7 @@ Each system and plan step has its **own log category**, so a problem can be isol
 | `LogVRTAI` | 13 | Enemy state transitions, perception events, move requests and results |
 | `LogVRTDirector` | 14 | Intensity, spawn decisions (cell, reason, rejected cells), budget |
 | `LogVRTCombat` | 11–12 | Damage (instigator, amount, remaining HP), death, ammo, reload |
+| `LogVRTFlat` | 11.5 | VRF flat mode: possession, free camera on/off, zoom (Verbose), cursor aim point (VeryVerbose, throttled). VRF shots log in `LogVRTWeapon`. |
 
 A new system gets a new category. Add it to this table and to `VRTLog.h/.cpp` in the same change.
 
@@ -150,7 +155,7 @@ VRT_LOG_THROTTLED(LogVRTTwoHand, VeryVerbose, 0.25, "Axis=%s Dist=%.1f", *Axis.T
 - At runtime (console `~` in the editor or the spectator window): `Log LogVRTTwoHand VeryVerbose`, then back with `Log LogVRTTwoHand Log`.
 - From the command line: `-LogCmds="LogVRTTwoHand VeryVerbose, LogVRTHand Verbose"`.
 - The log file is `Saved/Logs/VRT.log`. Earlier runs are kept as `VRT-backup-*.log`.
-- On-screen debug messages are not visible in the HMD. Rely on the log file plus world debug drawing (`VRT.Debug.*`).
+- On-screen debug messages are not visible in the HMD. Rely on the log file plus world debug drawing (`VRT.Debug.*`). In VRF (flat mode) on-screen messages, `DrawDebugString` and the HUD are visible.
 
 ### Agent debugging workflow
 1. The user describes the problem and plays a session with the relevant category at `Verbose` or `VeryVerbose`.
@@ -184,4 +189,5 @@ Grip state machine `EVRTGripState { None, OneHand, TwoHand }`:
 ## Testing
 - Each plan step ends with a **headset test** listed in `Docs/plan.md`. After finishing a step, write short test instructions for the user (what to do, what should happen, which log category to watch).
 - Use VR Preview in the editor. Remember that `bStartInVR=True`.
+- **AI and level steps (13+) are tested first in VRF** (World Settings → GameMode Override = `VRFGameMode`, play in *Selected Viewport*), then confirmed in the headset. Write test instructions for both. Remind the user to clear the override afterwards.
 - After the user confirms a test passed, tick the step in `Docs/plan.md` → *Progress*.

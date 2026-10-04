@@ -39,6 +39,11 @@ public:
 	/** World transform of the muzzle; its forward (X) axis is the shot direction. */
 	FTransform GetMuzzleTransform() const;
 
+	float GetFireInterval() const { return FireInterval; }
+	bool IsAutomatic() const { return bAutomatic; }
+	TSubclassOf<AVRTProjectile> GetProjectileClass() const { return ProjectileClass; }
+	float GetProjectileDamage() const { return ProjectileDamage; }
+
 	UVRTHandComponent* GetHoldingHand() const { return HoldingHand; }
 	bool IsHeld() const { return HoldingHand != nullptr; }
 

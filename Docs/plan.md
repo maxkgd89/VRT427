@@ -20,6 +20,8 @@ Project: `E:\UE_projects\VRT` · Engine: `E:\UE_4.27`
 
 Later: enemy AI, spawning director, combat, health, ammo, procedural labyrinth.
 
+**Flat playtest mode (VRF, step 11.5):** a second, top-down flat-screen game mode used only for developing AI and levels (debug spheres, EQS, enemy routes are easier to follow on a monitor than in the headset). The final game is VR only.
+
 ---
 
 ## 2. Target architecture
@@ -27,20 +29,25 @@ Later: enemy AI, spawning director, combat, health, ammo, procedural labyrinth.
 ### Source layout
 ```
 Source/VRT/
-  Player/      VRTPawn, VRTHandComponent, VRTHolsterComponent
-  Weapons/     VRTWeaponBase, VRTPistol, VRTRifle, VRTProjectile
-  Gameplay/    VRTGameMode, VRTGameState, VRTKey, VRTBeacon, VRTLevelExit, VRTTriggerBase
+  Player/      VRTPlayerPawnBase, VRTPawn, VRTHandComponent, VRTHolsterComponent,
+               VRFPawn, VRFPlayerController                             (VRF: step 11.5)
+  Weapons/     VRTWeaponBase, VRTPistol, VRTRifle, VRTProjectile, VRTShot (shared fire helper)
+  Gameplay/    VRTGameMode, VRFGameMode, VRTGameState, VRTKey, VRTBeacon, VRTLevelExit, VRTTriggerBase
   Level/       VRTMazeGenerator, VRTMazeData, VRTMazeBuilder        (step 10)
   AI/          VRTEnemy (+ V0/V1/V2), VRTEnemyController, VRTNoiseSubsystem, VRTDirector   (steps 13–14)
   Combat/      VRTHealthComponent, VRTDamageTypes                   (step 11+)
-  UI/          VRTWristDisplay                                      (step 8–9)
+  UI/          VRTWristDisplay (step 8–9), VRFHUD (step 11.5)
   Debug/       VRTDebugSettings (console vars)
 ```
 
 ### Key classes
 | Class | Base | Role |
 |---|---|---|
-| `AVRTPawn` | APawn | Exists already. HMD, controllers, capsule, smooth move, snap turn. Will gain hands and holsters. |
+| `AVRTPlayerPawnBase` | APawn | Step 11.5. Shared parent of both player pawns: capsule (`VRTPlayer` profile), `UFloatingPawnMovement`, `UVRTHealthComponent`, walk/run speeds, death → `RestartCurrentLevel()`. Virtual `PlayHapticPulseBothHands()` (empty in the base), `NotifyTeleported()`, `GetPawnViewLocation()` (the eye point enemies trace to). Gameplay code outside `Player/` uses this class, never `AVRTPawn`. |
+| `AVRTPawn` | AVRTPlayerPawnBase | VR pawn: HMD, controllers, smooth move, snap turn, hands, holsters, wrist display. `GetPawnViewLocation()` = HMD camera. |
+| `AVRFPawn` | AVRTPlayerPawnBase | Step 11.5. Flat top-down test pawn: WASD, mouse aim, built-in full-auto fire with the rifle's values, scroll zoom, free camera. `GetPawnViewLocation()` = floor + `EyeHeight`, never the camera. |
+| `AVRFPlayerController` | APlayerController | Step 11.5. Mouse cursor visible, game-and-UI input mode, fog off. |
+| `AVRFHUD` | AHUD | Step 11.5. Text HUD (HP, keys, exit, level, seed, zoom, free-cam), red damage flash. |
 | `UVRTHandComponent` | USceneComponent | One per hand. Grip/trigger state, overlap sphere for grabbing, current held item, haptics. |
 | `UVRTHolsterComponent` | USceneComponent | Body-relative zone (waist or shoulder) with a grab radius. Holds and respawns its weapon. |
 | `AVRTWeaponBase` | AActor | No physics. Attach/detach to hand, fire rate, muzzle, projectile class, return-to-holster. |
@@ -52,6 +59,7 @@ Source/VRT/
 | `AVRTLevelExit` | AVRTTriggerBase | At spawn. Checks key count ≥ `RequiredKeys` (2) and completes the level. |
 | `AVRTGameState` | AGameStateBase | Keys collected and keys total, level index, seed, level state. |
 | `AVRTGameMode` | AGameModeBase | Exists already. Level flow: Start → Playing → Complete → next level. |
+| `AVRFGameMode` | AVRTGameMode | Step 11.5. Same level flow; only swaps pawn, controller and HUD classes. Chosen per map in World Settings. |
 | `AVRTEnemy` | APawn | Step 13. Capsule, static mesh, `UFloatingPawnMovement`, health. Subclasses `AVRTEnemyV0/V1/V2` set feature flags and tunables. |
 | `AVRTEnemyController` | AAIController | Step 13. Pure C++ state machine, sight checks, spawn mode (roaming / sleeping). |
 | `UVRTNoiseSubsystem` | UWorldSubsystem | Step 13. Weapons report gunshots; sleeping enemies and V1 listen. |
@@ -70,6 +78,9 @@ Source/VRT/
 ### Input
 Move from hard-coded `EKeys::OculusTouch_*` bindings to named Action/Axis mappings in DefaultInput.ini. This lets Index, WMR and Quest controllers work, and lets the fire button be remapped:
 - `GrabLeft` / `GrabRight` (grip), `FireLeft` / `FireRight` (index trigger), `MoveX` / `MoveY`, `Turn`, `ToggleRun` (left Y button switches walk/run mode), `RecenterHMD` (left X button).
+- **VRF (flat mode, step 11.5)** uses its own names with the `VRF_` prefix, so keyboard/mouse never leak into VR bindings:
+  - axes `VRF_MoveForward` (W/S), `VRF_MoveRight` (D/A), `VRF_Zoom` (MouseWheelAxis), `VRF_MouseX` / `VRF_MouseY`;
+  - actions `VRF_Fire` (LMB), `VRF_Run` (LeftShift, hold), `VRF_FreeCamera` (F), `VRF_PanDrag` (MiddleMouseButton).
 
 ---
 
@@ -241,6 +252,45 @@ Grow the size per level; also scale braiding, number of rooms and enemy budget.
 - `UVRTHealthComponent` (health, max, `OnDamaged`, `OnDeath`) used by the player and enemies. Uses the UE `TakeDamage` / `ApplyPointDamage` flow.
 - Projectiles deal damage. Hit feedback: haptics and a screen-edge red vignette for the player.
 - Player death → fade → restart the level (same seed).
+- From step 11.5: health, damage feedback hooks and death handling live on `AVRTPlayerPawnBase`, shared by the VR and the flat pawn.
+
+### Step 11.5 — VRF flat playtest mode (AI and level testing)
+Goal: play the same maps on a monitor from a top-down camera, to see debug spheres, EQS, enemy routes and AI behaviour clearly. VR stays the real game; VRF is a dev tool.
+
+Rules:
+- Same maps, keys, exit, damage and level flow as VR. Only the pawn, controller and HUD differ.
+- **Selection:** World Settings → *GameMode Override* = `VRFGameMode` on the map being tested. Play with *Selected Viewport* or *New Editor Window*, not VR Preview. Clear the override to go back to VR.
+- VRF has no Recenter, ToggleMap (dev map), snap turn, grab, holsters, body anchor, wrist display, comfort vignette or seated/standing mode.
+- VRF has no weapon actor. Its firing is inside `AVRFPawn` and copies the rifle by reading `GetDefault<AVRTRifle>()` (fire interval, full-auto, projectile class, damage), so retuning the rifle retunes VRF. Unlimited ammo (step 12 does not apply to VRF).
+- Damage lives in the projectile (`ApplyPointDamage` with the player controller as instigator), so enemies take damage the same way from both pawns.
+- Logging: `LogVRTFlat` (possession, free camera on/off, zoom at Verbose, aim at VeryVerbose throttled). VRF shots log in `LogVRTWeapon`.
+
+#### 11.5.1 Shared player base
+- New `AVRTPlayerPawnBase` (`Player/VRTPlayerPawnBase.h/.cpp`): capsule, movement, health, walk/run speeds, shared death handling; virtual `PlayHapticPulseBothHands()`, `NotifyTeleported()`, `GetPawnViewLocation()`.
+- `AVRTPawn` derives from it; the moved components keep their names. VR behaviour must not change.
+- `VRTTriggerBase`, `VRTKey`, `VRTLevelExit` and `VRTGameMode::LoadPendingLevel` use `AVRTPlayerPawnBase*` instead of `AVRTPawn*`.
+- `Weapons/VRTShot.h/.cpp`: `VRTShot::Fire(...)` spawns a projectile with owner, instigator and damage. `AVRTWeaponBase::Fire()` uses it. Public getters on `AVRTWeaponBase`: `GetFireInterval()`, `IsAutomatic()`, `GetProjectileClass()`, `GetProjectileDamage()`.
+- **Test (headset):** VR plays exactly as before: keys, exit, pistol and gun, `VRT.Player.Damage`, death → restart.
+
+#### 11.5.2 VRF pawn, controller, game mode: movement and camera
+- `AVRFPawn`: body cylinder plus a "nose" mesh showing the facing, `USpringArmComponent` with absolute rotation (`CameraPitch` −90 by default, editable; fixed `CameraYaw`; no collision test) and `UCameraComponent`.
+- WASD moves relative to the camera yaw (W = up on screen) with `UFloatingPawnMovement`, walk 150 / run 350 cm/s (Shift held). Walls block the capsule. No gravity.
+- Scroll wheel zoom: arm length × 1.15 per notch, eased, clamped `MinArm` 400 to `MaxArm` 12000 cm (whole 32×32 maze visible).
+- `GetPawnViewLocation()` = floor + `EyeHeight` (150 cm, same as `SeatedEyeHeight`).
+- `AVRFPlayerController`: cursor visible, game-and-UI input mode (no mouse capture), `ShowFlag.Fog 0` at start.
+- `AVRFGameMode : AVRTGameMode`: `DefaultPawnClass = AVRFPawn`, `PlayerControllerClass = AVRFPlayerController`, `HUDClass = AVRFHUD`.
+- `VRF_*` mappings added to `Config/DefaultInput.ini` (see Input).
+- **Test (monitor):** set the override on the test map and on the maze map; walk the maze from above; walls block; keys and exit work; next level moves the pawn to the new spawn; zoom in and out over a large maze.
+
+#### 11.5.3 Aim and fire
+- Mouse cursor → `DeprojectMousePositionToWorld` → intersection with the horizontal plane at muzzle height (`MuzzleHeight` 120 cm). The pawn turns to face that point; `VRT.Debug.Aim 1` draws the aim line.
+- LMB held → full-auto through a timer and cooldown, fired through `VRTShot::Fire` with the rifle's interval, projectile class and damage.
+- **Test (monitor):** `VRT.Dummy.Spawn`, shoot it: 10 damage per hit at 0.1 s, the same as the VR gun; shots stop at walls.
+
+#### 11.5.4 Free camera and HUD
+- `F` (`VRF_FreeCamera`) detaches the camera: it stays where it is while **WASD keeps moving the pawn**; only middle-mouse drag (`VRF_PanDrag` + `VRF_MouseX/Y`) pans the camera; the wheel still zooms. `F` again re-attaches it to the pawn. Aim and fire work in both modes.
+- `AVRFHUD::DrawHUD` (no UMG): HP, keys X/4, exit status, level, seed, zoom, `FREE CAM` indicator; red screen flash on damage.
+- **Test (monitor):** F detaches, middle-drag pans while WASD still walks the pawn, F returns; HUD values match the game state; `VRT.Player.Damage` flashes red; death restarts the level.
 
 ### Step 12 — Ammo and reload
 - Pistol and gun magazines, reserve ammo.
@@ -260,8 +310,9 @@ Rules for the whole step:
 - **No animation.** Solid static meshes (engine primitives). All feedback in code: colour/emissive per state via a dynamic material instance, scale pulse, lean, flash before an attack, scale-out on death.
 - **Walls block sight** both ways: "sees the player" = range + FOV + line trace, never distance alone.
 - Logging in `LogVRTAI`: every state change as `Old -> New (reason)`, every perception event (seen, lost, heard shot, woke, alerted, was alerted).
-- Debug cvar `VRT.Debug.AI 1`: sight cone and trace line (green clear / red blocked), last known location, wake spheres, alert radius, and the current state as world-space text above the enemy (visible in the HMD).
-- Each sub-step ends with a headset test: first with hand-placed enemies in `L_Test`, then in the maze.
+- Debug cvar `VRT.Debug.AI 1`: sight cone and trace line (green clear / red blocked), last known location, wake spheres, alert radius, and the current state as world-space text above the enemy (visible in the HMD and in VRF).
+- **Finding the player:** enemies get the player as `AVRTPlayerPawnBase` (`GetPlayerPawn(0)`) and trace sight to `GetPawnViewLocation()` (HMD in VR, floor + 150 cm in VRF), never to a camera. Never cast to `AVRTPawn` in AI code.
+- Each sub-step is tested **first in VRF** (step 11.5: top-down view, debug drawing, on-screen text), with hand-placed enemies in `L_Test`, then in the maze; **then confirmed in the headset**.
 
 #### 13.1 Enemy base
 - `AVRTEnemy` (`APawn`): capsule root, `UStaticMeshComponent`, `UFloatingPawnMovement`, `UVRTHealthComponent`. Movement through `AAIController::MoveToLocation` / `MoveToActor` on the NavMesh.
@@ -284,7 +335,7 @@ Rules for the whole step:
 
 #### 13.4 Spawn modes: roaming and sleeping (V0, V1, V2)
 - `EVRTSpawnMode { Roaming, Sleeping }`. Roaming starts in Wander.
-- Gunshot events: weapons report each shot to a world subsystem (`UVRTNoiseSubsystem::ReportGunshot(LocationWorld)`, with a delegate). Sleeping enemies (and V1 in 13.5) listen to it. No `UAIPerceptionComponent`.
+- Gunshot events: every shot reports to a world subsystem from `VRTShot::Fire` (so VR weapons and the VRF pawn are both heard) (`UVRTNoiseSubsystem::ReportGunshot(LocationWorld)`, with a delegate). Sleeping enemies (and V1 in 13.5) listen to it. No `UAIPerceptionComponent`.
 - Sleeping: no sight. Approach sphere 3 m → wake → Chase. Gunshot sphere 15 m → wake → go to the shot location. Spheres ignore walls. Wake-up delay 0.5–1 s with a visible cue. Never sleeps again; after waking it behaves as roaming.
 - Sleeping visuals: dim colour, slow "breathing" scale pulse.
 - **Test:** sneak past a sleeping V0 at more than 3 m without waking it. Walk inside 3 m and it wakes and chases. Shoot within 15 m (even behind a wall) and it wakes and goes to the shot spot.
@@ -336,6 +387,13 @@ Rules for the whole step:
 - Holsters follow the head yaw slowly (dead zone `BodyYawDeadZone` 35°, then `BodyYawFollowSpeed` 90°/s); snap turns rotate the body instantly.
 - Enemy AI: **pure C++** (state machine, no Behavior Trees, no Blueprints where C++ can do it). **No animation**: enemies are solid static meshes. Enemy designs live in `Docs/enemies.md`.
 - Enemy types: **V0** basic (sight, melee), **V1** + hearing gunshots, **V2** + alerting others. Each can spawn **roaming** or **sleeping**.
+- **VRF flat playtest mode** (step 11.5) for AI and level work:
+  - both player pawns derive from `AVRTPlayerPawnBase` (not an interface);
+  - VRF firing lives in `AVRFPawn` (no weapon actor) and reads the rifle's defaults;
+  - damage lives in the projectile (`ApplyPointDamage`);
+  - VRF is chosen per map in **World Settings → GameMode Override** (no automatic HMD detection, no `?game=` alias);
+  - camera pitch is editable, default −90° (pure top-down);
+  - extras: **free camera only** (WASD keeps moving the pawn; middle-mouse drag pans the camera). No AI-ignore, god mode, teleport, time-scale keys.
 
 ## 7. Open questions
 - None at the moment.
@@ -357,7 +415,12 @@ Rules for the whole step:
   - [x] 10.4 GameMode regenerates on next level (seed+1, bigger)
   - [x] 10.5 Runtime NavMesh rebuild
   - [ ] 10.6 Performance check on the max size
-- [ ] Step 11 — Health and damage
+- [x] Step 11 — Health and damage
+- [ ] Step 11.5 — VRF flat playtest mode
+  - [ ] 11.5.1 Shared player base (`AVRTPlayerPawnBase`, `VRTShot`)
+  - [ ] 11.5.2 VRF pawn, controller, game mode: movement and camera
+  - [ ] 11.5.3 Aim and fire
+  - [ ] 11.5.4 Free camera and HUD
 - [ ] Step 12 — Ammo and reload
 - [ ] Step 13 — Enemy AI iterations (V0 → V1 → V2)
   - [ ] 13.1 Enemy base (pawn, controller, health, collision)

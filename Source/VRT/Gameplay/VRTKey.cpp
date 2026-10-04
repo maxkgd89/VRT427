@@ -6,7 +6,7 @@
 #include "Gameplay/VRTBeacon.h"
 #include "Gameplay/VRTGameState.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/VRTPawn.h"
+#include "Player/VRTPlayerPawnBase.h"
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
@@ -102,7 +102,7 @@ void AVRTKey::Tick(float DeltaSeconds)
 	}
 }
 
-void AVRTKey::OnPlayerEntered(AVRTPawn* Pawn)
+void AVRTKey::OnPlayerEntered(AVRTPlayerPawnBase* Pawn)
 {
 	if (bCollected)
 	{

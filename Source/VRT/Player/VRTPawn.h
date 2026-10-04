@@ -1,14 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "Player/VRTPlayerPawnBase.h"
 #include "VRTPawn.generated.h"
 
 class AVRTMazeBuilder;
 class UCameraComponent;
-class UCapsuleComponent;
-class UVRTHealthComponent;
-class UFloatingPawnMovement;
 class UMotionControllerComponent;
 class UVRTHandComponent;
 class UVRTHolsterComponent;
@@ -25,20 +22,22 @@ enum class EVRTPlayMode : uint8
 
 /** VR pawn: HMD camera plus two motion controllers, each with a cube marking the hand. */
 UCLASS()
-class VRT_API AVRTPawn : public APawn
+class VRT_API AVRTPawn : public AVRTPlayerPawnBase
 {
 	GENERATED_BODY()
 
 public:
 	AVRTPawn();
 
-	UVRTHealthComponent* GetHealthComponent() const { return Health; }
+	/** Body yaw and fall speed start fresh; the base class restores health. */
+	virtual void NotifyTeleported() override;
 
-	/** Call after the pawn was moved to a new place (new level): the body yaw and fall speed start fresh, health is full and the player is alive. */
-	void NotifyTeleported();
+	virtual void PlayHapticPulseBothHands(float Intensity = 0.5f, float DurationSec = 0.15f) override;
 
-	/** Short vibration on both controllers (pickups, level feedback). Intensity 0-1, duration in seconds. */
-	void PlayHapticPulseBothHands(float Intensity = 0.5f, float DurationSec = 0.15f);
+	virtual FVector GetFacingDirectionFlat() const override;
+
+	/** The HMD camera: enemies trace their sight to the player's head. */
+	virtual FVector GetPawnViewLocation() const override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -90,14 +89,9 @@ protected:
 	/** Head height (cm above the floor) used for the last holster update. */
 	float LastHeadHeight = -1.f;
 
-	/** Health component events (step 11). */
-	UFUNCTION()
-	void HandleDamaged(float Damage, float NewHealth, AActor* DamageCauser);
-	UFUNCTION()
-	void HandleDeath(AActor* DamageCauser);
-
-	/** True from death until the level is rebuilt: no movement, no shooting, no grabbing. */
-	bool bDead = false;
+	/** Hit feedback: haptics, red flash, wrist text. */
+	virtual void OnDamagedFeedback(float Damage, float NewHealth, AActor* DamageCauser) override;
+	virtual void OnDied(AActor* DamageCauser) override;
 
 	/** 1 right after a hit, fades to 0 over DamageFlashSeconds. Drives the red screen-edge feedback. */
 	float DamageFlash = 0.f;
@@ -150,9 +144,6 @@ protected:
 	FVector GetControllerForwardFlat() const;
 	FVector GetControllerRightFlat() const;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
-	UFloatingPawnMovement* Movement;
-
 	/** Standing uses floor-level tracking. Seated uses eye-level tracking and lifts the origin to SeatedEyeHeight. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
 	EVRTPlayMode PlayMode = EVRTPlayMode::Seated;
@@ -176,10 +167,6 @@ protected:
 	/** How quickly the vignette fades in and out (higher is faster). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Comfort", meta = (ClampMin = "0.1"))
 	float VignetteFadeSpeed = 4.f;
-
-	/** Player health. Damage arrives through the UE damage flow (bullets, later enemy hits). */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
-	UVRTHealthComponent* Health;
 
 	/** Seconds the red hit flash takes to fade out. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Combat", meta = (ClampMin = "0.1"))
@@ -209,27 +196,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Map")
 	float MapHeightBelowHead = 35.f;
 
-	/** Walk speed in cm/s. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
-	float WalkSpeed = 150.f;
-
-	/** Run speed in cm/s, used while in run mode. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Locomotion")
-	float RunSpeed = 350.f;
-
-	/** Collision volume (root). Follows the HMD's horizontal position every tick. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
-	UCapsuleComponent* Capsule;
-
 	/** Tracking-space origin, parented to the capsule and positioned at floor level. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
 	USceneComponent* VROrigin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Collision")
-	float CapsuleRadius = 30.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Collision")
-	float CapsuleHalfHeight = 85.f;
 
 	/** Downward acceleration in cm/s^2, so the capsule settles back to the floor after stepping onto something. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Collision")

@@ -26,15 +26,6 @@
 AVRTPawn::AVRTPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	// PlayerStart may sit in or on the floor; BeginPlay snaps the pawn onto the floor afterwards.
-	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	AutoPossessPlayer = EAutoReceiveInput::Player0;
-
-	Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
-	Capsule->InitCapsuleSize(CapsuleRadius, CapsuleHalfHeight);
-	Capsule->SetCollisionProfileName(VRTCollision::PlayerProfile);
-	Capsule->SetCanEverAffectNavigation(false); // the player must not carve a hole into the navigation mesh
-	SetRootComponent(Capsule);
 
 	VROrigin = CreateDefaultSubobject<USceneComponent>(TEXT("VROrigin"));
 	VROrigin->SetupAttachment(Capsule);
@@ -101,13 +92,6 @@ AVRTPawn::AVRTPawn()
 	RightHandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightHandMesh"));
 	RightHandMesh->SetupAttachment(RightController);
 
-	Health = CreateDefaultSubobject<UVRTHealthComponent>(TEXT("Health"));
-
-	Movement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Movement"));
-	Movement->MaxSpeed = WalkSpeed;
-	Movement->Acceleration = 2000.f;
-	Movement->Deceleration = 2000.f;
-
 	// Engine cube is 100uu wide; scale to a 10 cm cube.
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
 	for (UStaticMeshComponent* Hand : { LeftHandMesh, RightHandMesh })
@@ -123,39 +107,39 @@ AVRTPawn::AVRTPawn()
 
 void AVRTPawn::NotifyTeleported()
 {
+	Super::NotifyTeleported(); // full health, alive
+
 	bBodyYawInitialized = false;
 	VerticalVelocity = 0.f;
-
-	// A new level (or a restart after dying) starts with full health.
-	bDead = false;
 	DamageFlash = 0.f;
-	Health->ResetHealth();
 	RefreshWristDisplay();
 }
 
-void AVRTPawn::HandleDamaged(float Damage, float NewHealth, AActor* DamageCauser)
+FVector AVRTPawn::GetFacingDirectionFlat() const
+{
+	return Camera->GetForwardVector().GetSafeNormal2D();
+}
+
+FVector AVRTPawn::GetPawnViewLocation() const
+{
+	return Camera->GetComponentLocation();
+}
+
+void AVRTPawn::OnDamagedFeedback(float Damage, float NewHealth, AActor* DamageCauser)
 {
 	// Hit feedback: both controllers buzz (harder for bigger hits), the screen edges flash red.
 	const float Strength = FMath::Clamp(Damage / Health->GetMaxHealth(), 0.f, 1.f);
 	PlayHapticPulseBothHands(FMath::Max(0.3f, Strength) * DamageHapticIntensity, 0.2f);
 	DamageFlash = 1.f;
 	RefreshWristDisplay();
-	VRT_LOG(LogVRTCombat, Log, "Player hit for %.0f, %.0f of %.0f health left", Damage, NewHealth, Health->GetMaxHealth());
 }
 
-void AVRTPawn::HandleDeath(AActor* DamageCauser)
+void AVRTPawn::OnDied(AActor* DamageCauser)
 {
-	bDead = true;
 	DamageFlash = 1.f;
 	RawMoveInput = FVector2D::ZeroVector;
 	PlayHapticPulseBothHands(DamageHapticIntensity, 0.5f);
 	RefreshWristDisplay();
-	VRT_LOG(LogVRTCombat, Log, "Player died (killed by %s), restarting the level", *GetNameSafe(DamageCauser));
-
-	if (AVRTGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<AVRTGameMode>() : nullptr)
-	{
-		GameMode->RestartCurrentLevel();
-	}
 }
 
 void AVRTPawn::PlayHapticPulseBothHands(float Intensity, float DurationSec)
@@ -192,9 +176,6 @@ void AVRTPawn::BeginPlay()
 		const float FloorZ = VROrigin->GetComponentLocation().Z - GetFloorToOriginHeight();
 		AddActorWorldOffset(FVector(0.f, 0.f, Hit.ImpactPoint.Z - FloorZ));
 	}
-
-	Health->OnDamaged.AddDynamic(this, &AVRTPawn::HandleDamaged);
-	Health->OnDeath.AddDynamic(this, &AVRTPawn::HandleDeath);
 
 	if (AVRTGameState* State = GetWorld()->GetGameState<AVRTGameState>())
 	{

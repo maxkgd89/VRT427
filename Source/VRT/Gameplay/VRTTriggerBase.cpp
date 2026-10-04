@@ -2,7 +2,7 @@
 #include "Components/SphereComponent.h"
 #include "Debug/VRTDebugSettings.h"
 #include "DrawDebugHelpers.h"
-#include "Player/VRTPawn.h"
+#include "Player/VRTPlayerPawnBase.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
 
@@ -38,7 +38,7 @@ void AVRTTriggerBase::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Only the player's pawn counts; the overlap profile already excludes everything else.
-	if (AVRTPawn* Pawn = Cast<AVRTPawn>(OtherActor))
+	if (AVRTPlayerPawnBase* Pawn = Cast<AVRTPlayerPawnBase>(OtherActor))
 	{
 		VRT_LOG(LogVRTGameFlow, Verbose, "%s: player entered", *GetName());
 		OnPlayerEntered(Pawn);
@@ -48,7 +48,7 @@ void AVRTTriggerBase::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponen
 void AVRTTriggerBase::HandleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (AVRTPawn* Pawn = Cast<AVRTPawn>(OtherActor))
+	if (AVRTPlayerPawnBase* Pawn = Cast<AVRTPlayerPawnBase>(OtherActor))
 	{
 		VRT_LOG(LogVRTGameFlow, Verbose, "%s: player left", *GetName());
 		OnPlayerExited(Pawn);

@@ -4,20 +4,19 @@
 //   VRT.Player.Health            logs the player health
 //   VRT.Dummy.Spawn [health]     spawns a shooting target with health 3 m in front of the player
 #include "CoreMinimal.h"
-#include "Camera/CameraComponent.h"
 #include "Combat/VRTHealthComponent.h"
 #include "Combat/VRTTargetDummy.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/VRTPawn.h"
+#include "Player/VRTPlayerPawnBase.h"
 #include "VRTLog.h"
 
 namespace
 {
-	AVRTPawn* GetPlayerPawn(UWorld* World)
+	AVRTPlayerPawnBase* GetPlayerPawn(UWorld* World)
 	{
-		return World ? Cast<AVRTPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr;
+		return World ? Cast<AVRTPlayerPawnBase>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr;
 	}
 
 	FAutoConsoleCommandWithWorldAndArgs GPlayerDamage(
@@ -25,7 +24,7 @@ namespace
 		TEXT("Hurts the player. Args: [amount, default 25]"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 		{
-			if (AVRTPawn* Pawn = GetPlayerPawn(World))
+			if (AVRTPlayerPawnBase* Pawn = GetPlayerPawn(World))
 			{
 				const float Amount = Args.Num() > 0 ? FCString::Atof(*Args[0]) : 25.f;
 				UGameplayStatics::ApplyDamage(Pawn, Amount, nullptr, nullptr, nullptr);
@@ -37,7 +36,7 @@ namespace
 		TEXT("Heals the player. Args: [amount, default full health]"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 		{
-			if (AVRTPawn* Pawn = GetPlayerPawn(World))
+			if (AVRTPlayerPawnBase* Pawn = GetPlayerPawn(World))
 			{
 				UVRTHealthComponent* Health = Pawn->GetHealthComponent();
 				Health->Heal(Args.Num() > 0 ? FCString::Atof(*Args[0]) : Health->GetMaxHealth());
@@ -49,7 +48,7 @@ namespace
 		TEXT("Logs the player health (LogVRTCombat)."),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
 		{
-			if (AVRTPawn* Pawn = GetPlayerPawn(World))
+			if (AVRTPlayerPawnBase* Pawn = GetPlayerPawn(World))
 			{
 				const UVRTHealthComponent* Health = Pawn->GetHealthComponent();
 				VRT_LOG(LogVRTCombat, Log, "Player health %.0f / %.0f, alive=%d", Health->GetHealth(), Health->GetMaxHealth(), Health->IsAlive() ? 1 : 0);
@@ -61,18 +60,15 @@ namespace
 		TEXT("Spawns a shooting target with health 3 m in front of the player, on the floor, turned toward the player. Args: [health, default 100]"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 		{
-			const AVRTPawn* Pawn = GetPlayerPawn(World);
-			const UCameraComponent* Camera = Pawn ? Pawn->FindComponentByClass<UCameraComponent>() : nullptr;
-			if (!Camera)
+			const AVRTPlayerPawnBase* Pawn = GetPlayerPawn(World);
+			if (!Pawn)
 			{
 				return;
 			}
 
-			// 3 m in front of the head (flattened), standing on the floor: the capsule centre is 85 cm above it.
-			FVector Forward = Camera->GetForwardVector();
-			Forward.Z = 0.f;
-			Forward = Forward.GetSafeNormal();
-			const FVector SpawnWorld = Pawn->GetActorLocation() - FVector(0.f, 0.f, 85.f) + Forward * 300.f + FVector(0.f, 0.f, 90.f);
+			// 3 m in front of the player (flattened), standing on the floor.
+			const FVector Forward = Pawn->GetFacingDirectionFlat();
+			const FVector SpawnWorld = Pawn->GetActorLocation() - FVector(0.f, 0.f, Pawn->GetCapsuleHalfHeight()) + Forward * 300.f + FVector(0.f, 0.f, 90.f);
 			const FTransform SpawnTransform(FRotator(0.f, (-Forward).Rotation().Yaw, 0.f), SpawnWorld);
 
 			AVRTTargetDummy* Dummy = World->SpawnActorDeferred<AVRTTargetDummy>(AVRTTargetDummy::StaticClass(), SpawnTransform, nullptr, nullptr,

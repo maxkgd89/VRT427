@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "VRTTriggerBase.generated.h"
 
-class AVRTPawn;
+class AVRTPlayerPawnBase;
 class USphereComponent;
 
 /**
@@ -26,8 +26,8 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	/** The player's pawn entered / left the trigger sphere. */
-	virtual void OnPlayerEntered(AVRTPawn* Pawn) {}
-	virtual void OnPlayerExited(AVRTPawn* Pawn) {}
+	virtual void OnPlayerEntered(AVRTPlayerPawnBase* Pawn) {}
+	virtual void OnPlayerExited(AVRTPlayerPawnBase* Pawn) {}
 
 	UFUNCTION()
 	void HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

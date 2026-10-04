@@ -6,7 +6,7 @@
 #include "Gameplay/VRTGameMode.h"
 #include "Gameplay/VRTGameState.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Player/VRTPawn.h"
+#include "Player/VRTPlayerPawnBase.h"
 #include "UObject/ConstructorHelpers.h"
 #include "VRTLog.h"
 
@@ -102,7 +102,7 @@ void AVRTLevelExit::RefreshVisual()
 	}
 }
 
-void AVRTLevelExit::OnPlayerEntered(AVRTPawn* Pawn)
+void AVRTLevelExit::OnPlayerEntered(AVRTPlayerPawnBase* Pawn)
 {
 	AVRTGameState* State = GetWorld()->GetGameState<AVRTGameState>();
 	if (!State || State->GetLevelState() != EVRTLevelState::Playing)
@@ -132,7 +132,7 @@ void AVRTLevelExit::OnPlayerEntered(AVRTPawn* Pawn)
 	}
 }
 
-void AVRTLevelExit::OnPlayerExited(AVRTPawn* Pawn)
+void AVRTLevelExit::OnPlayerExited(AVRTPlayerPawnBase* Pawn)
 {
 	bArmed = true;
 }

@@ -6,7 +6,7 @@
 #include "VRTGameMode.generated.h"
 
 /**
- * Game mode that spawns AVRTPawn and runs the level flow: Start -> Playing -> Complete -> (fade) -> next level.
+ * Game mode that spawns AVRTPawn (the VR pawn) and runs the level flow: Start -> Playing -> Complete -> (fade) -> next level.
  *
  * With an AVRTMazeBuilder in the level, the next level is built in place behind a fade: the builder generates a
  * bigger maze with seed + 1 and the player is moved to the new spawn. Without a builder (the hand-made test map)
