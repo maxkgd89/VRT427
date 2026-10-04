@@ -14,7 +14,7 @@ namespace
 {
 	// Same unlit emissive material as the beacons (created by Tools/Editor/create_test_level.py).
 	const TCHAR* PadMaterialPath = TEXT("/Game/VRT/Materials/M_Beacon.M_Beacon");
-	const TCHAR* FallbackMaterialPath = TEXT("/Engine/EngineMaterials/EmissiveMeshMaterial.EmissiveMeshMaterial");
+	const TCHAR* ExitFallbackMaterialPath = TEXT("/Engine/EngineMaterials/EmissiveMeshMaterial.EmissiveMeshMaterial");
 }
 
 AVRTLevelExit::AVRTLevelExit()
@@ -44,7 +44,7 @@ void AVRTLevelExit::BeginPlay()
 	UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, PadMaterialPath, nullptr, LOAD_NoWarn);
 	if (!Base)
 	{
-		Base = LoadObject<UMaterialInterface>(nullptr, FallbackMaterialPath);
+		Base = LoadObject<UMaterialInterface>(nullptr, ExitFallbackMaterialPath);
 	}
 	if (Base)
 	{

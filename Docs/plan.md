@@ -417,7 +417,7 @@ Rules for the whole step:
   - [ ] 10.6 Performance check on the max size
 - [x] Step 11 — Health and damage
 - [ ] Step 11.5 — VRF flat playtest mode
-  - [ ] 11.5.1 Shared player base (`AVRTPlayerPawnBase`, `VRTShot`)
+  - [x] 11.5.1 Shared player base (`AVRTPlayerPawnBase`, `VRTShot`)
   - [ ] 11.5.2 VRF pawn, controller, game mode: movement and camera
   - [ ] 11.5.3 Aim and fire
   - [ ] 11.5.4 Free camera and HUD

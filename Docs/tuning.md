@@ -72,6 +72,21 @@ Change a value in the header (default for the class) or on the placed actor / Bl
 | `ForwardOffset` | `0.f` | VRT > Holster | Cm in front of (+) or behind (-) the body anchor. |
 | `RightOffset` | `0.f` | VRT > Holster | Cm to the right of (+) or left of (-) the body anchor. |
 
+## `AVRFPawn`
+
+Inherits `CapsuleRadius` (30), `CapsuleHalfHeight` (85), `WalkSpeed` (150) and `RunSpeed` (350) from `AVRTPlayerPawnBase`.
+
+| Property | Default | Category | Meaning |
+|---|---|---|---|
+| `CameraPitch` | `-90.f` | VRF > Camera | Camera pitch in degrees. -90 is straight down. |
+| `CameraYaw` | `-90.f` | VRF > Camera | Camera yaw in degrees. Fixed: the view never follows the pawn, only WASD movement uses its direction. |
+| `StartArmLength` | `2000.f` | VRF > Camera | Arm length a level starts with, cm (the camera's height above the pawn). |
+| `MinArm` | `400.f` | VRF > Camera | Closest the camera may come to the pawn, cm. |
+| `MaxArm` | `12000.f` | VRF > Camera | Furthest the camera may go, cm. 12000 cm shows a whole 32x32 maze. |
+| `ZoomStep` | `1.15f` | VRF > Camera | Arm length factor per scroll notch (higher zooms faster). |
+| `ZoomInterpSpeed` | `8.f` | VRF > Camera | How fast the arm reaches the target length; higher is snappier. |
+| `EyeHeight` | `150.f` | VRF > Camera | Eye height above the floor for `GetPawnViewLocation()`, cm (same value as the VR pawn's SeatedEyeHeight). |
+
 ## `AVRTPawn`
 
 | Property | Default | Category | Meaning |
@@ -135,3 +150,11 @@ Change a value in the header (default for the class) or on the placed actor / Bl
 
 Pistol: grip offset `(8, 0, 0)`, 0.4 s fire interval, semi-auto. Gun: grip offset `(12, 0, 0)`, 0.1 s fire interval, full-auto, barrel grip point at `(12, 0, 0)` with a 10 cm radius.
 Hand grab sphere: 8 cm. Holster zones: 18 cm. Projectile: 4500 cm/s, 3 s lifetime, 4 cm ball.
+
+`AVRFPawn` constructor (`Source/VRT/Player/VRFPawn.cpp`):
+
+| Component | Mesh | Scale (cm) | Notes |
+|---|---|---|---|
+| `BodyMesh` | `Cylinder` | `(0.6, 0.6, 1.7)` | 60 x 170 cm cylinder, matches the capsule; visual only. |
+| `NoseMesh` | `Cube` | `(0.35, 0.12, 0.12)` | At `(40, 0, 0)`, pokes out of the capsule front to show the facing. |
+| `CameraArm` | — | — | `TargetArmLength` 2000 cm, absolute rotation, no collision test. |

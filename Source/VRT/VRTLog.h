@@ -17,6 +17,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogVRTNav, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogVRTAI, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogVRTDirector, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogVRTCombat, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogVRTFlat, Log, All);
 
 // Prefixes every line with function and line. Pass a plain string literal (no TEXT()).
 #define VRT_LOG(Category, Verbosity, Format, ...) \

@@ -28,8 +28,8 @@
 namespace
 {
 	/** Real cell size the miniature represents, cm (plan 10.4: 4 m cells). */
-	constexpr float CellSizeCm = 400.f;
-	constexpr float WallHeightCm = 200.f;
+	constexpr float MazeCellSizeCm = 400.f;
+	constexpr float MazeWallHeightCm = 200.f;
 
 	void GenerateCommand(const TArray<FString>& Args, UWorld* World)
 	{
@@ -66,10 +66,10 @@ namespace
 		if (const APawn* Pawn = UGameplayStatics::GetPlayerPawn(World, 0))
 		{
 			const FVector Forward = Pawn->GetActorForwardVector().GetSafeNormal2D();
-			Center = Pawn->GetActorLocation() + Forward * (CellSizeCm * Scale * Maze.Height * 0.5f + 80.f) + FVector(0.f, 0.f, 20.f);
+			Center = Pawn->GetActorLocation() + Forward * (MazeCellSizeCm * Scale * Maze.Height * 0.5f + 80.f) + FVector(0.f, 0.f, 20.f);
 		}
-		const FVector Origin = Center - FVector(Maze.Width * CellSizeCm * Scale * 0.5f, Maze.Height * CellSizeCm * Scale * 0.5f, 0.f);
-		VRTMazeMap::DrawMaze(World, Maze, Origin, Scale, CellSizeCm, WallHeightCm);
+		const FVector Origin = Center - FVector(Maze.Width * MazeCellSizeCm * Scale * 0.5f, Maze.Height * MazeCellSizeCm * Scale * 0.5f, 0.f);
+		VRTMazeMap::DrawMaze(World, Maze, Origin, Scale, MazeCellSizeCm, MazeWallHeightCm);
 		VRT_LOG(LogVRTMaze, Log, "Miniature drawn at(World)=%s scale=%.3f (VRT.Maze.Clear removes it)", *Origin.ToCompactString(), Scale);
 	}
 
