@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 #include "VRTCollision.h"
 #include "VRTLog.h"
@@ -61,5 +62,10 @@ void AVRTProjectile::HandleHit(UPrimitiveComponent* HitComponent, AActor* OtherA
 
 	// Debug hit effect: a red flash at the impact point.
 	DrawDebugSphere(GetWorld(), Hit.ImpactPoint, HitMarkerRadius, 8, FColor::Red, false, 1.f, 0, 0.5f);
+
+	if (OtherActor && Damage > 0.f)
+	{
+		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, GetVelocity().GetSafeNormal(), Hit, GetInstigatorController(), this, nullptr);
+	}
 	Destroy();
 }

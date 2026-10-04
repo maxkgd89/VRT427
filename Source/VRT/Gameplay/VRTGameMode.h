@@ -26,6 +26,9 @@ public:
 	/** Fades out and goes to the given level (1-based). Also used for restarts: pass the current level. */
 	void GoToLevel(int32 TargetLevel);
 
+	/** The player died: fades out and rebuilds the current level (same seed and size). */
+	void RestartCurrentLevel();
+
 	int32 GetLevelIndex() const { return LevelIndex; }
 
 protected:

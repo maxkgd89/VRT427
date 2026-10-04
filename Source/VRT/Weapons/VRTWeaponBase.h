@@ -72,6 +72,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.1"))
 	float FireSoundMaxSeconds = 0.25f;
 
+	/** Damage of one bullet. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.0"))
+	float ProjectileDamage = 20.f;
+
 	/** True: holding the trigger keeps firing every FireInterval. False: one shot per press. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon")
 	bool bAutomatic = false;

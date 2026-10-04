@@ -99,6 +99,12 @@ void AVRTGameMode::CompleteLevel()
 	GoToLevel(LevelIndex + 1);
 }
 
+void AVRTGameMode::RestartCurrentLevel()
+{
+	VRT_LOG(LogVRTGameFlow, Log, "Restarting level %d (same seed)", LevelIndex);
+	GoToLevel(LevelIndex);
+}
+
 void AVRTGameMode::GoToLevel(int32 TargetLevel)
 {
 	AVRTGameState* State = GetGameState<AVRTGameState>();

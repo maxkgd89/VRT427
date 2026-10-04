@@ -30,6 +30,7 @@ AVRTRifle::AVRTRifle()
 	PrimaryActorTick.TickGroup = TG_PostUpdateWork;
 
 	FireInterval = 0.1f;
+	ProjectileDamage = 10.f; // automatic: 100 damage per second, the pistol does 50
 	bAutomatic = true;
 
 	// Engine cube is 100 cm wide: 40 cm along the barrel (X), 4 x 4 cm cross-section.

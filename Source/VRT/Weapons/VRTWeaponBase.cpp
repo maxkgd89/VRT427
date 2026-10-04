@@ -131,7 +131,10 @@ void AVRTWeaponBase::Fire()
 		Params.Owner = this;
 		Params.Instigator = GetInstigator();
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		GetWorld()->SpawnActor<AVRTProjectile>(ProjectileClass, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator(), Params);
+		if (AVRTProjectile* Projectile = GetWorld()->SpawnActor<AVRTProjectile>(ProjectileClass, MuzzleTransform.GetLocation(), MuzzleTransform.GetRotation().Rotator(), Params))
+		{
+			Projectile->SetDamage(ProjectileDamage);
+		}
 	}
 
 	if (FireSound)

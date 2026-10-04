@@ -8,7 +8,9 @@
 #include "MotionControllerComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Combat/VRTHealthComponent.h"
 #include "Debug/VRTMazeMapDraw.h"
+#include "Gameplay/VRTGameMode.h"
 #include "EngineUtils.h"
 #include "Level/VRTMazeBuilder.h"
 #include "Gameplay/VRTGameState.h"
@@ -99,6 +101,8 @@ AVRTPawn::AVRTPawn()
 	RightHandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightHandMesh"));
 	RightHandMesh->SetupAttachment(RightController);
 
+	Health = CreateDefaultSubobject<UVRTHealthComponent>(TEXT("Health"));
+
 	Movement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Movement"));
 	Movement->MaxSpeed = WalkSpeed;
 	Movement->Acceleration = 2000.f;
@@ -121,6 +125,37 @@ void AVRTPawn::NotifyTeleported()
 {
 	bBodyYawInitialized = false;
 	VerticalVelocity = 0.f;
+
+	// A new level (or a restart after dying) starts with full health.
+	bDead = false;
+	DamageFlash = 0.f;
+	Health->ResetHealth();
+	RefreshWristDisplay();
+}
+
+void AVRTPawn::HandleDamaged(float Damage, float NewHealth, AActor* DamageCauser)
+{
+	// Hit feedback: both controllers buzz (harder for bigger hits), the screen edges flash red.
+	const float Strength = FMath::Clamp(Damage / Health->GetMaxHealth(), 0.f, 1.f);
+	PlayHapticPulseBothHands(FMath::Max(0.3f, Strength) * DamageHapticIntensity, 0.2f);
+	DamageFlash = 1.f;
+	RefreshWristDisplay();
+	VRT_LOG(LogVRTCombat, Log, "Player hit for %.0f, %.0f of %.0f health left", Damage, NewHealth, Health->GetMaxHealth());
+}
+
+void AVRTPawn::HandleDeath(AActor* DamageCauser)
+{
+	bDead = true;
+	DamageFlash = 1.f;
+	RawMoveInput = FVector2D::ZeroVector;
+	PlayHapticPulseBothHands(DamageHapticIntensity, 0.5f);
+	RefreshWristDisplay();
+	VRT_LOG(LogVRTCombat, Log, "Player died (killed by %s), restarting the level", *GetNameSafe(DamageCauser));
+
+	if (AVRTGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<AVRTGameMode>() : nullptr)
+	{
+		GameMode->RestartCurrentLevel();
+	}
 }
 
 void AVRTPawn::PlayHapticPulseBothHands(float Intensity, float DurationSec)
@@ -157,6 +192,9 @@ void AVRTPawn::BeginPlay()
 		const float FloorZ = VROrigin->GetComponentLocation().Z - GetFloorToOriginHeight();
 		AddActorWorldOffset(FVector(0.f, 0.f, Hit.ImpactPoint.Z - FloorZ));
 	}
+
+	Health->OnDamaged.AddDynamic(this, &AVRTPawn::HandleDamaged);
+	Health->OnDeath.AddDynamic(this, &AVRTPawn::HandleDeath);
 
 	if (AVRTGameState* State = GetWorld()->GetGameState<AVRTGameState>())
 	{
@@ -253,6 +291,11 @@ void AVRTPawn::OnMoveRight(float Value)
 
 void AVRTPawn::ApplyMoveInput()
 {
+	if (bDead)
+	{
+		return;
+	}
+
 	// Radial dead zone: judged on the stick's total deflection so drift on one axis can't leak through.
 	const float Magnitude = RawMoveInput.Size();
 	if (Magnitude <= MoveDeadZone)
@@ -358,6 +401,10 @@ void AVRTPawn::OnToggleRun()
 
 void AVRTPawn::OnFirePressed()
 {
+	if (bDead)
+	{
+		return;
+	}
 	RightHand->OnTriggerPressed();
 }
 
@@ -368,6 +415,10 @@ void AVRTPawn::OnFireReleased()
 
 void AVRTPawn::OnGrabLeftPressed()
 {
+	if (bDead)
+	{
+		return;
+	}
 	LeftHand->OnGripPressed();
 }
 
@@ -378,6 +429,10 @@ void AVRTPawn::OnGrabLeftReleased()
 
 void AVRTPawn::OnGrabRightPressed()
 {
+	if (bDead)
+	{
+		return;
+	}
 	RightHand->OnGripPressed();
 }
 
@@ -447,8 +502,8 @@ void AVRTPawn::RefreshWristDisplay()
 	{
 		const int32 Missing = FMath::Max(0, State->GetRequiredKeys() - State->GetKeysCollected());
 		const FString ExitLine = Missing > 0 ? FString::Printf(TEXT("EXIT NEEDS %d MORE"), Missing) : FString(TEXT("EXIT OPEN"));
-		Text = FString::Printf(TEXT("KEYS %d/%d\n%s\nLEVEL %d  %dx%d\nSEED %d"), State->GetKeysCollected(), State->GetKeysTotal(), *ExitLine,
-			State->GetLevelIndex(), State->GetMazeWidth(), State->GetMazeHeight(), State->GetMazeSeed());
+		Text = FString::Printf(TEXT("HP %.0f/%.0f\nKEYS %d/%d\n%s\nLEVEL %d  %dx%d\nSEED %d"), Health->GetHealth(), Health->GetMaxHealth(),
+			State->GetKeysCollected(), State->GetKeysTotal(), *ExitLine, State->GetLevelIndex(), State->GetMazeWidth(), State->GetMazeHeight(), State->GetMazeSeed());
 	}
 	WristDisplay->SetText(FText::FromString(Text));
 	VRT_LOG(LogVRTGameFlow, Verbose, "Wrist display: %s", *Text.Replace(TEXT("\n"), TEXT(" | ")));
@@ -461,14 +516,30 @@ void AVRTPawn::Tick(float DeltaSeconds)
 	ApplyMoveInput();
 	UpdateBodyAnchor();
 
-	if (bComfortVignette)
+	// Screen effects on the camera's post process: the comfort vignette and the red hit flash. Skipped while neither is active.
+	if (!bDead)
 	{
-		// Vignette follows how far the stick is pushed (after the dead zone), eased in and out.
-		const float Deflection = RawMoveInput.Size() > MoveDeadZone ? FMath::Min(RawMoveInput.Size(), 1.f) : 0.f;
-		CurrentVignette = FMath::FInterpTo(CurrentVignette, Deflection * VignetteMaxIntensity, DeltaSeconds, VignetteFadeSpeed);
+		DamageFlash = FMath::Max(0.f, DamageFlash - DeltaSeconds / DamageFlashSeconds);
+	}
+	if (bComfortVignette || DamageFlash > 0.f || bScreenEffectsDirty)
+	{
+		float Vignette = 0.f;
+		if (bComfortVignette)
+		{
+			// Vignette follows how far the stick is pushed (after the dead zone), eased in and out.
+			const float Deflection = RawMoveInput.Size() > MoveDeadZone ? FMath::Min(RawMoveInput.Size(), 1.f) : 0.f;
+			CurrentVignette = FMath::FInterpTo(CurrentVignette, Deflection * VignetteMaxIntensity, DeltaSeconds, VignetteFadeSpeed);
+			Vignette = CurrentVignette;
+		}
+		Vignette = FMath::Max(Vignette, DamageFlash * DamageVignetteIntensity);
+
+		FPostProcessSettings& PostProcess = Camera->PostProcessSettings;
 		Camera->PostProcessBlendWeight = 1.f;
-		Camera->PostProcessSettings.bOverride_VignetteIntensity = true;
-		Camera->PostProcessSettings.VignetteIntensity = CurrentVignette;
+		PostProcess.bOverride_VignetteIntensity = true;
+		PostProcess.VignetteIntensity = Vignette;
+		PostProcess.bOverride_SceneColorTint = true;
+		PostProcess.SceneColorTint = FLinearColor::LerpUsingHSV(FLinearColor::White, FLinearColor(1.f, 0.15f, 0.15f), DamageFlash * DamageTintStrength);
+		bScreenEffectsDirty = DamageFlash > 0.f;
 	}
 
 	if (bMapVisible)

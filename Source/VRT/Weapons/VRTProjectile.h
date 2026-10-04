@@ -17,6 +17,10 @@ class VRT_API AVRTProjectile : public AActor
 public:
 	AVRTProjectile();
 
+public:
+	/** Sets the damage dealt on a hit. The weapon calls this right after spawning the bullet. */
+	void SetDamage(float InDamage) { Damage = InDamage; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -35,6 +39,10 @@ protected:
 	/** Speed in cm/s. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "100.0"))
 	float Speed = 4500.f;
+
+	/** Damage dealt to whatever it hits (point damage through the UE damage flow). The weapon overrides it. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.0"))
+	float Damage = 20.f;
 
 	/** Seconds before the projectile removes itself. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Weapon", meta = (ClampMin = "0.1"))

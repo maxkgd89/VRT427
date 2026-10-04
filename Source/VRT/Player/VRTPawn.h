@@ -7,6 +7,7 @@
 class AVRTMazeBuilder;
 class UCameraComponent;
 class UCapsuleComponent;
+class UVRTHealthComponent;
 class UFloatingPawnMovement;
 class UMotionControllerComponent;
 class UVRTHandComponent;
@@ -31,7 +32,9 @@ class VRT_API AVRTPawn : public APawn
 public:
 	AVRTPawn();
 
-	/** Call after the pawn was moved to a new place (new level): the body yaw and fall speed start fresh. */
+	UVRTHealthComponent* GetHealthComponent() const { return Health; }
+
+	/** Call after the pawn was moved to a new place (new level): the body yaw and fall speed start fresh, health is full and the player is alive. */
 	void NotifyTeleported();
 
 	/** Short vibration on both controllers (pickups, level feedback). Intensity 0-1, duration in seconds. */
@@ -86,6 +89,21 @@ protected:
 
 	/** Head height (cm above the floor) used for the last holster update. */
 	float LastHeadHeight = -1.f;
+
+	/** Health component events (step 11). */
+	UFUNCTION()
+	void HandleDamaged(float Damage, float NewHealth, AActor* DamageCauser);
+	UFUNCTION()
+	void HandleDeath(AActor* DamageCauser);
+
+	/** True from death until the level is rebuilt: no movement, no shooting, no grabbing. */
+	bool bDead = false;
+
+	/** 1 right after a hit, fades to 0 over DamageFlashSeconds. Drives the red screen-edge feedback. */
+	float DamageFlash = 0.f;
+
+	/** True while the camera post process still has to be put back to normal after a flash. */
+	bool bScreenEffectsDirty = false;
 
 	void OnFirePressed();
 	void OnFireReleased();
@@ -158,6 +176,26 @@ protected:
 	/** How quickly the vignette fades in and out (higher is faster). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Comfort", meta = (ClampMin = "0.1"))
 	float VignetteFadeSpeed = 4.f;
+
+	/** Player health. Damage arrives through the UE damage flow (bullets, later enemy hits). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VR")
+	UVRTHealthComponent* Health;
+
+	/** Seconds the red hit flash takes to fade out. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Combat", meta = (ClampMin = "0.1"))
+	float DamageFlashSeconds = 0.6f;
+
+	/** Vignette strength at the peak of the hit flash (0-1). The vignette darkens the screen edges. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Combat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float DamageVignetteIntensity = 0.9f;
+
+	/** How strongly the whole view turns red at the peak of the hit flash (0-1). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Combat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float DamageTintStrength = 0.5f;
+
+	/** Haptic pulse on both hands for a hit that takes the whole health (scaled down for smaller hits; at least 0.3). Intensity 0-1. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Combat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float DamageHapticIntensity = 1.f;
 
 	/** Longest side of the dev map miniature, cm. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRT|Map", meta = (ClampMin = "20.0"))
